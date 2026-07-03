@@ -18,6 +18,74 @@ enum PanDirection {
     func signed(deltaX: CGFloat, deltaY: CGFloat) -> CGFloat { (isHorizontal ? deltaX : deltaY) * sign }
 }
 
+enum HorizontalSwipeDirection: Equatable {
+    case left
+    case right
+}
+
+struct HorizontalSwipeAccumulator {
+    private(set) var threshold: CGFloat
+    private(set) var accumulated: CGFloat = 0
+    private(set) var direction: HorizontalSwipeDirection?
+    private(set) var hasTriggered = false
+
+    init(threshold: CGFloat) {
+        self.threshold = max(1, threshold)
+    }
+
+    mutating func updateThreshold(_ threshold: CGFloat) {
+        let sanitized = max(1, threshold)
+        guard sanitized != self.threshold else { return }
+        self.threshold = sanitized
+        reset()
+    }
+
+    mutating func consume(delta: CGFloat, isEnabled: Bool = true) -> HorizontalSwipeDirection? {
+        guard isEnabled else {
+            reset()
+            return nil
+        }
+        guard !hasTriggered, delta != 0 else { return nil }
+
+        let incomingDirection: HorizontalSwipeDirection = delta < 0 ? .left : .right
+        if direction != incomingDirection {
+            direction = incomingDirection
+            accumulated = abs(delta)
+        } else {
+            accumulated += abs(delta)
+        }
+
+        guard accumulated >= threshold else { return nil }
+        hasTriggered = true
+        return incomingDirection
+    }
+
+    mutating func reset() {
+        accumulated = 0
+        direction = nil
+        hasTriggered = false
+    }
+}
+
+func horizontalSwipeDestination(
+    from currentView: NotchViews,
+    direction: HorizontalSwipeDirection,
+    isInverted: Bool,
+    includesShelf: Bool
+) -> NotchViews? {
+    let orderedViews: [NotchViews] = includesShelf
+        ? [.home, .activities, .shelf]
+        : [.home, .activities]
+    guard let currentIndex = orderedViews.firstIndex(of: currentView) else { return nil }
+
+    let movesTowardRight = isInverted
+        ? direction == .left
+        : direction == .right
+    let destinationIndex = currentIndex + (movesTowardRight ? 1 : -1)
+    guard orderedViews.indices.contains(destinationIndex) else { return nil }
+    return orderedViews[destinationIndex]
+}
+
 extension View {
     func panGesture(direction: PanDirection, threshold: CGFloat = 4, action: @escaping (CGFloat, NSEvent.Phase) -> Void) -> some View {
         self
@@ -31,6 +99,144 @@ extension View {
                     .onEnded { _ in action(0, .ended) }
             )
             .background(ScrollMonitor(direction: direction, threshold: threshold, action: action))
+    }
+
+    func horizontalTrackpadSwipe(
+        isEnabled: Bool,
+        threshold: CGFloat,
+        action: @escaping (HorizontalSwipeDirection) -> Void
+    ) -> some View {
+        background(
+            HorizontalTrackpadSwipeMonitor(
+                isEnabled: isEnabled,
+                threshold: threshold,
+                action: action
+            )
+        )
+    }
+}
+
+private struct HorizontalTrackpadSwipeMonitor: NSViewRepresentable {
+    let isEnabled: Bool
+    let threshold: CGFloat
+    let action: (HorizontalSwipeDirection) -> Void
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        context.coordinator.installMonitor(on: view)
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        context.coordinator.update(
+            isEnabled: isEnabled,
+            threshold: threshold,
+            action: action
+        )
+    }
+
+    static func dismantleNSView(_ nsView: NSView, coordinator: Coordinator) {
+        coordinator.removeMonitor()
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(isEnabled: isEnabled, threshold: threshold, action: action)
+    }
+
+    @MainActor final class Coordinator: NSObject {
+        private var isEnabled: Bool
+        private var accumulator: HorizontalSwipeAccumulator
+        private var action: (HorizontalSwipeDirection) -> Void
+        private var monitor: Any?
+        private var endTask: Task<Void, Never>?
+
+        init(
+            isEnabled: Bool,
+            threshold: CGFloat,
+            action: @escaping (HorizontalSwipeDirection) -> Void
+        ) {
+            self.isEnabled = isEnabled
+            self.accumulator = HorizontalSwipeAccumulator(threshold: threshold)
+            self.action = action
+        }
+
+        func update(
+            isEnabled: Bool,
+            threshold: CGFloat,
+            action: @escaping (HorizontalSwipeDirection) -> Void
+        ) {
+            if self.isEnabled != isEnabled {
+                accumulator.reset()
+            }
+            self.isEnabled = isEnabled
+            accumulator.updateThreshold(threshold)
+            self.action = action
+        }
+
+        func installMonitor(on view: NSView) {
+            removeMonitor()
+            monitor = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { [weak self, weak view] event in
+                guard let self, event.window === view?.window else { return event }
+                self.handleScroll(event)
+                return event
+            }
+        }
+
+        func removeMonitor() {
+            if let monitor {
+                NSEvent.removeMonitor(monitor)
+                self.monitor = nil
+            }
+            endTask?.cancel()
+            endTask = nil
+            accumulator.reset()
+        }
+
+        private func handleScroll(_ event: NSEvent) {
+            if event.phase == .ended || event.momentumPhase == .ended {
+                finishGesture()
+                return
+            }
+
+            guard isEnabled,
+                  event.hasPreciseScrollingDeltas,
+                  event.momentumPhase.isEmpty
+            else { return }
+
+            if event.phase == .began {
+                accumulator.reset()
+            }
+
+            let absDX = abs(event.scrollingDeltaX)
+            let absDY = abs(event.scrollingDeltaY)
+            guard absDX >= 1.5 * absDY, absDX > 0.2 else { return }
+
+            // Convert content-scrolling deltas back to physical finger direction so the
+            // shortcut remains stable when Natural Scrolling is toggled.
+            let physicalDelta = event.isDirectionInvertedFromDevice
+                ? -event.scrollingDeltaX
+                : event.scrollingDeltaX
+
+            if let direction = accumulator.consume(delta: physicalDelta, isEnabled: isEnabled) {
+                action(direction)
+            }
+            scheduleEndTimeout()
+        }
+
+        private func scheduleEndTimeout() {
+            endTask?.cancel()
+            endTask = Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(250))
+                guard !Task.isCancelled else { return }
+                finishGesture()
+            }
+        }
+
+        private func finishGesture() {
+            endTask?.cancel()
+            endTask = nil
+            accumulator.reset()
+        }
     }
 }
 

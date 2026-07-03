@@ -146,6 +146,7 @@ struct GeneralSettings: View {
     @Default(.showOnAllDisplays) var showOnAllDisplays
     @Default(.automaticallySwitchDisplay) var automaticallySwitchDisplay
     @Default(.enableGestures) var enableGestures
+    @Default(.horizontalTabGestures) var horizontalTabGestures
     @Default(.openNotchOnHover) var openNotchOnHover
     
 
@@ -286,8 +287,13 @@ struct GeneralSettings: View {
             }
                 .disabled(!openNotchOnHover)
             if enableGestures {
-                Toggle("Change media with horizontal gestures", isOn: .constant(false))
-                    .disabled(true)
+                Defaults.Toggle(key: .horizontalTabGestures) {
+                    Text("Navigate notch tabs with horizontal swipe")
+                }
+                Defaults.Toggle(key: .invertHorizontalTabGestures) {
+                    Text("Invert horizontal swipe direction")
+                }
+                .disabled(!horizontalTabGestures)
                 Defaults.Toggle(key: .closeGestureEnabled) {
                     Text("Close gesture")
                 }
@@ -310,7 +316,7 @@ struct GeneralSettings: View {
             }
         } footer: {
             Text(
-                "Two-finger swipe up on notch to close, two-finger swipe down on notch to open when **Open notch on hover** option is disabled"
+                "Swipe horizontally with two fingers to move between Home, Activities, and Shelf. When direction is inverted, swiping right to left opens the tab on the right."
             )
             .multilineTextAlignment(.trailing)
             .foregroundStyle(.secondary)

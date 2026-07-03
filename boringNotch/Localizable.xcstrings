@@ -1,6 +1,12 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Invert horizontal swipe direction" : {
+      "extractionState" : "manual"
+    },
+    "Swipe horizontally with two fingers to move between Home, Activities, and Shelf. When direction is inverted, swiping right to left opens the tab on the right." : {
+      "extractionState" : "manual"
+    },
     "" : {
       "localizations" : {
         "ar" : {
@@ -200,6 +206,9 @@
           }
         }
       }
+    },
+    ":" : {
+
     },
     "'Now Playing' was the only option on previous versions and works with all media apps." : {
       "localizations" : {
@@ -1001,6 +1010,9 @@
         }
       }
     },
+    "%lldm" : {
+
+    },
     "• Bug fixes" : {
       "localizations" : {
         "ar" : {
@@ -1700,6 +1712,9 @@
           }
         }
       }
+    },
+    "Activities" : {
+      "extractionState" : "manual"
     },
     "Add" : {
       "localizations" : {
@@ -4303,6 +4318,7 @@
       }
     },
     "Change media with horizontal gestures" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -7404,6 +7420,15 @@
           }
         }
       }
+    },
+    "Dismiss" : {
+      "extractionState" : "manual"
+    },
+    "Dismiss timer" : {
+      "extractionState" : "manual"
+    },
+    "Done" : {
+      "extractionState" : "manual"
     },
     "Download" : {
       "localizations" : {
@@ -11208,6 +11233,9 @@
         }
       }
     },
+    "Hours" : {
+      "extractionState" : "manual"
+    },
     "Hover delay" : {
       "localizations" : {
         "ar" : {
@@ -13709,6 +13737,9 @@
         }
       }
     },
+    "Minutes" : {
+      "extractionState" : "manual"
+    },
     "Mirror" : {
       "localizations" : {
         "ar" : {
@@ -14408,6 +14439,9 @@
           }
         }
       }
+    },
+    "Navigate notch tabs with horizontal swipe" : {
+      "extractionState" : "manual"
     },
     "Never hide" : {
       "localizations" : {
@@ -16110,6 +16144,9 @@
         }
       }
     },
+    "Pause" : {
+      "extractionState" : "manual"
+    },
     "Pick a Color" : {
       "localizations" : {
         "ar" : {
@@ -17710,6 +17747,12 @@
         }
       }
     },
+    "Reset" : {
+      "extractionState" : "manual"
+    },
+    "Reset stopwatch" : {
+      "extractionState" : "manual"
+    },
     "Reset to Defaults" : {
       "localizations" : {
         "ar" : {
@@ -18011,6 +18054,9 @@
         }
       }
     },
+    "Resume" : {
+      "extractionState" : "manual"
+    },
     "Running" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -18111,6 +18157,9 @@
           }
         }
       }
+    },
+    "Seconds" : {
+      "extractionState" : "manual"
     },
     "Select the music source you want to use. You can change this later in the app settings." : {
       "localizations" : {
@@ -18411,6 +18460,9 @@
           }
         }
       }
+    },
+    "Set timer for %lld minutes" : {
+
     },
     "Settings" : {
       "localizations" : {
@@ -20812,6 +20864,18 @@
         }
       }
     },
+    "Start" : {
+      "extractionState" : "manual"
+    },
+    "Start stopwatch" : {
+      "extractionState" : "manual"
+    },
+    "Start Stopwatch" : {
+      "extractionState" : "manual"
+    },
+    "Start timer" : {
+      "extractionState" : "manual"
+    },
     "Stopped" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -20912,6 +20976,9 @@
           }
         }
       }
+    },
+    "Stopwatch" : {
+      "extractionState" : "manual"
     },
     "Support Us" : {
       "extractionState" : "stale",
@@ -21214,6 +21281,15 @@
         }
       }
     },
+    "Time activity" : {
+      "extractionState" : "manual"
+    },
+    "Time activity type" : {
+      "extractionState" : "manual"
+    },
+    "Time controls" : {
+      "extractionState" : "manual"
+    },
     "Time to Full Charge: %lld min" : {
       "localizations" : {
         "ar" : {
@@ -21313,6 +21389,15 @@
           }
         }
       }
+    },
+    "Timer" : {
+      "extractionState" : "manual"
+    },
+    "Timer Done" : {
+      "extractionState" : "manual"
+    },
+    "Timer finished" : {
+      "extractionState" : "manual"
     },
     "Tint progress bar with accent color" : {
       "localizations" : {
@@ -21615,6 +21700,7 @@
       }
     },
     "Two-finger swipe up on notch to close, two-finger swipe down on notch to open when **Open notch on hover** option is disabled" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {

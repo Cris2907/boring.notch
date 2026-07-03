@@ -23,6 +23,7 @@ struct ContentView: View {
     @ObservedObject var batteryModel = BatteryStatusViewModel.shared
     @ObservedObject var brightnessManager = BrightnessManager.shared
     @ObservedObject var volumeManager = VolumeManager.shared
+    @ObservedObject var timeActivityManager = TimeActivityManager.shared
     @State private var hoverTask: Task<Void, Never>?
     @State private var isHovering: Bool = false
     @State private var anyDropDebounceTask: Task<Void, Never>?
@@ -65,6 +66,8 @@ struct ContentView: View {
             && vm.notchState == .closed && Defaults[.showPowerStatusNotifications]
         {
             chinWidth = 640
+        } else if timeActivityManager.hasSession && vm.notchState == .closed && !vm.hideOnClosed {
+            chinWidth += 176
         } else if (!coordinator.expandingView.show || coordinator.expandingView.type == .music)
             && vm.notchState == .closed && (musicManager.isPlaying || !musicManager.isPlayerIdle)
             && coordinator.musicLiveActivityEnabled && !vm.hideOnClosed
@@ -78,6 +81,12 @@ struct ContentView: View {
         }
 
         return chinWidth
+    }
+
+    private var shouldShowMediaActivity: Bool {
+        (!coordinator.expandingView.show || coordinator.expandingView.type == .music)
+            && (musicManager.isPlaying || !musicManager.isPlayerIdle)
+            && coordinator.musicLiveActivityEnabled
     }
 
     var body: some View {
@@ -145,6 +154,14 @@ struct ContentView: View {
                             .panGesture(direction: .up) { translation, phase in
                                 handleUpGesture(translation: translation, phase: phase)
                             }
+                    }
+                    .horizontalTrackpadSwipe(
+                        isEnabled: Defaults[.enableGestures]
+                            && Defaults[.horizontalTabGestures]
+                            && vm.notchState == .open,
+                        threshold: max(50, Defaults[.gestureSensitivity] / 2)
+                    ) { direction in
+                        handleHorizontalSwipe(direction)
                     }
                     .onReceive(NotificationCenter.default.publisher(for: .sharingDidFinish)) { _ in
                         if vm.notchState == .open && !isHovering && !vm.isBatteryPopoverActive {
@@ -287,7 +304,17 @@ struct ContentView: View {
                       } else if coordinator.sneakPeek.show && Defaults[.inlineHUD] && (coordinator.sneakPeek.type != .music) && (coordinator.sneakPeek.type != .battery) && vm.notchState == .closed {
                           InlineHUD(type: $coordinator.sneakPeek.type, value: $coordinator.sneakPeek.value, icon: $coordinator.sneakPeek.icon, hoverAnimation: $isHovering, gestureProgress: $gestureProgress)
                               .transition(.opacity)
-                      } else if (!coordinator.expandingView.show || coordinator.expandingView.type == .music) && vm.notchState == .closed && (musicManager.isPlaying || !musicManager.isPlayerIdle) && coordinator.musicLiveActivityEnabled && !vm.hideOnClosed {
+                      } else if coordinator.sneakPeek.show && !Defaults[.inlineHUD] && coordinator.sneakPeek.type != .music && coordinator.sneakPeek.type != .battery && vm.notchState == .closed {
+                          Rectangle()
+                              .fill(.clear)
+                              .frame(width: vm.closedNotchSize.width - 20, height: vm.effectiveClosedNotchHeight)
+                      } else if timeActivityManager.hasSession && vm.notchState == .closed && !vm.hideOnClosed {
+                          ClosedTimeActivityView(
+                              showMedia: shouldShowMediaActivity && timeActivityManager.snapshot?.phase != .finished,
+                              albumArtNamespace: albumArtNamespace
+                          )
+                          .transition(.opacity)
+                      } else if shouldShowMediaActivity && vm.notchState == .closed && !vm.hideOnClosed {
                           MusicLiveActivity()
                               .frame(alignment: .center)
                       } else if !coordinator.expandingView.show && vm.notchState == .closed && (!musicManager.isPlaying && musicManager.isPlayerIdle) && Defaults[.showNotHumanFace] && !vm.hideOnClosed  {
@@ -323,7 +350,7 @@ struct ContentView: View {
                           }
                           // Old sneak peek music
                           else if coordinator.sneakPeek.type == .music {
-                              if vm.notchState == .closed && !vm.hideOnClosed && Defaults[.sneakPeekStyles] == .standard {
+                              if vm.notchState == .closed && !vm.hideOnClosed && Defaults[.sneakPeekStyles] == .standard && !timeActivityManager.hasSession {
                                   HStack(alignment: .center) {
                                       Image(systemName: "music.note")
                                       GeometryReader { geo in
@@ -347,10 +374,13 @@ struct ContentView: View {
                     switch coordinator.currentView {
                     case .home:
                         NotchHomeView(albumArtNamespace: albumArtNamespace)
+                    case .activities:
+                        TimeActivityView()
                     case .shelf:
                         ShelfView()
                     }
                 }
+                .id(coordinator.currentView)
                 .transition(
                     .scale(scale: 0.8, anchor: .top)
                     .combined(with: .opacity)
@@ -558,6 +588,25 @@ struct ContentView: View {
     }
 
     // MARK: - Gesture Handling
+
+    private func handleHorizontalSwipe(_ direction: HorizontalSwipeDirection) {
+        guard vm.notchState == .open,
+              let destination = horizontalSwipeDestination(
+                from: coordinator.currentView,
+                direction: direction,
+                isInverted: Defaults[.invertHorizontalTabGestures],
+                includesShelf: Defaults[.boringShelf]
+              )
+        else { return }
+
+        withAnimation(.smooth(duration: 0.3)) {
+            coordinator.currentView = destination
+        }
+
+        if Defaults[.enableHaptics] {
+            haptics.toggle()
+        }
+    }
 
     private func handleDownGesture(translation: CGFloat, phase: NSEvent.Phase) {
         guard vm.notchState == .closed else { return }
