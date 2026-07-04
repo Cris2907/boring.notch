@@ -3,6 +3,7 @@
 //  boringNotch
 //
 
+import AppKit
 import SwiftUI
 
 struct TimeActivityView: View {
@@ -11,11 +12,11 @@ struct TimeActivityView: View {
     @ObservedObject private var webcamManager = WebcamManager.shared
 
     @State private var selectedKind: TimeActivityKind = .timer
-    @State private var hours = 0
-    @State private var minutes = 5
-    @State private var seconds = 0
+    @State private var selectedMinutes = 5
+    @State private var rulerOffset: CGFloat = 0
 
-    private let presets = [1, 5, 10, 25]
+    private let minuteRange = 1...Int(TimeActivitySnapshot.maximumTimerDuration / 60)
+    private let rulerTickSpacing: CGFloat = 18
 
     var body: some View {
         Group {
@@ -40,7 +41,7 @@ struct TimeActivityView: View {
     }
 
     private var setupView: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 4) {
             Picker("Time activity", selection: $selectedKind) {
                 Text("Timer").tag(TimeActivityKind.timer)
                 Text("Stopwatch").tag(TimeActivityKind.stopwatch)
@@ -48,7 +49,8 @@ struct TimeActivityView: View {
             .pickerStyle(.segmented)
             .labelsHidden()
             .tint(.orange)
-            .frame(width: 220)
+            .controlSize(.small)
+            .frame(width: 190)
             .accessibilityLabel("Time activity type")
 
             if selectedKind == .timer {
@@ -60,47 +62,55 @@ struct TimeActivityView: View {
     }
 
     private var timerSetup: some View {
-        HStack(spacing: 20) {
-            VStack(spacing: 6) {
-                HStack(spacing: 8) {
-                    durationField("Hours", value: $hours, range: 0...99)
-                    timeSeparator
-                    durationField("Minutes", value: $minutes, range: 0...59)
-                    timeSeparator
-                    durationField("Seconds", value: $seconds, range: 0...59)
-                }
+        VStack(spacing: 2) {
+            TimerRuler(
+                selectedMinutes: selectedMinutes,
+                range: minuteRange,
+                tickSpacing: rulerTickSpacing,
+                offset: rulerOffset
+            )
+            .frame(height: 64)
 
-                HStack(spacing: 6) {
-                    ForEach(presets, id: \.self) { preset in
-                        Button("\(preset)m") {
-                            hours = 0
-                            minutes = preset
-                            seconds = 0
-                        }
-                        .buttonStyle(.plain)
-                        .font(.system(size: 11, weight: .semibold, design: .rounded))
+            HStack(alignment: .center) {
+                Button {
+                    manager.startTimer(duration: selectedDuration)
+                } label: {
+                    Text("Start timer")
+                        .font(.system(size: 16, weight: .semibold, design: .rounded))
                         .foregroundStyle(.orange)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 3)
-                        .background(.orange.opacity(0.14), in: Capsule())
-                        .overlay(Capsule().stroke(.orange.opacity(0.32), lineWidth: 1))
-                        .accessibilityLabel("Set timer for \(preset) minutes")
-                    }
+                        .padding(.horizontal, 18)
+                        .frame(height: 36)
+                        .background(.orange.opacity(0.2), in: Capsule())
                 }
-            }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Start \(selectedMinutes) minute timer")
 
-            Spacer(minLength: 0)
+                Spacer(minLength: 12)
 
-            activityCircleButton(
-                icon: "play.fill",
-                foreground: .orange,
-                background: .orange.opacity(0.28),
-                accessibilityLabel: "Start timer"
-            ) {
-                manager.startTimer(duration: selectedDuration)
+                Text(TimeActivityFormatter.timer(selectedDuration))
+                    .font(.system(size: 38, weight: .regular, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(.orange)
+                    .contentTransition(.numericText())
+                    .accessibilityLabel("Timer duration \(selectedMinutes) minutes")
             }
-            .disabled(!TimeActivitySnapshot.isValidTimerDuration(selectedDuration))
-            .opacity(TimeActivitySnapshot.isValidTimerDuration(selectedDuration) ? 1 : 0.4)
+        }
+        .contentShape(Rectangle())
+        .threeFingerHorizontalTrackpadSwipe(isEnabled: selectedKind == .timer) { delta, phase in
+            handleTimerSwipe(delta: delta, phase: phase)
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Timer duration selector")
+        .accessibilityHint("Swipe horizontally with three fingers to adjust the timer")
+        .accessibilityAdjustableAction { direction in
+            switch direction {
+            case .increment:
+                selectedMinutes = min(selectedMinutes + 1, minuteRange.upperBound)
+            case .decrement:
+                selectedMinutes = max(selectedMinutes - 1, minuteRange.lowerBound)
+            @unknown default:
+                break
+            }
         }
     }
 
@@ -116,43 +126,6 @@ struct TimeActivityView: View {
             secondaryAction: {},
             secondaryEnabled: false
         )
-    }
-
-    private var timeSeparator: some View {
-        Text(":")
-            .font(.system(size: 24, weight: .medium, design: .rounded))
-            .foregroundStyle(.orange.opacity(0.75))
-            .padding(.top, 11)
-    }
-
-    private func durationField(
-        _ label: String,
-        value: Binding<Int>,
-        range: ClosedRange<Int>
-    ) -> some View {
-        TextField(
-            label,
-            value: Binding(
-                get: { value.wrappedValue },
-                set: { value.wrappedValue = min(max($0, range.lowerBound), range.upperBound) }
-            ),
-            format: .number
-        )
-        .textFieldStyle(.plain)
-        .multilineTextAlignment(.center)
-        .font(.system(size: 24, weight: .medium, design: .rounded))
-        .monospacedDigit()
-        .foregroundStyle(.orange)
-        .frame(width: 62, height: 36)
-        .background(.white.opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-        .overlay(alignment: .top) {
-            Text(label)
-                .font(.system(size: 8, weight: .semibold))
-                .foregroundStyle(.gray)
-                .offset(y: -11)
-        }
-        .padding(.top, 10)
-        .accessibilityLabel(label)
     }
 
     @ViewBuilder
@@ -266,7 +239,41 @@ struct TimeActivityView: View {
     }
 
     private var selectedDuration: TimeInterval {
-        TimeInterval((hours * 3_600) + (minutes * 60) + seconds)
+        TimeInterval(selectedMinutes * 60)
+    }
+
+    private func handleTimerSwipe(delta: CGFloat, phase: NSEvent.Phase) {
+        guard selectedKind == .timer else { return }
+
+        if phase == .began {
+            rulerOffset = 0
+            return
+        }
+
+        if phase == .ended || phase == .cancelled {
+            withAnimation(.snappy(duration: 0.18)) {
+                rulerOffset = 0
+            }
+            return
+        }
+
+        rulerOffset += delta
+
+        while rulerOffset <= -rulerTickSpacing && selectedMinutes < minuteRange.upperBound {
+            selectedMinutes += 1
+            rulerOffset += rulerTickSpacing
+        }
+
+        while rulerOffset >= rulerTickSpacing && selectedMinutes > minuteRange.lowerBound {
+            selectedMinutes -= 1
+            rulerOffset -= rulerTickSpacing
+        }
+
+        if selectedMinutes == minuteRange.lowerBound && rulerOffset > 0 {
+            rulerOffset = 0
+        } else if selectedMinutes == minuteRange.upperBound && rulerOffset < 0 {
+            rulerOffset = 0
+        }
     }
 
     private func updateInterval(for snapshot: TimeActivitySnapshot) -> TimeInterval? {
@@ -290,6 +297,80 @@ struct TimeActivityView: View {
         return snapshot.kind == .timer
             ? "Timer remaining \(TimeActivityFormatter.timer(snapshot.remaining(at: date)))"
             : "Stopwatch elapsed \(TimeActivityFormatter.stopwatch(snapshot.elapsed(at: date), includesCentiseconds: false))"
+    }
+}
+
+private struct TimerRuler: View {
+    let selectedMinutes: Int
+    let range: ClosedRange<Int>
+    let tickSpacing: CGFloat
+    let offset: CGFloat
+
+    var body: some View {
+        GeometryReader { geometry in
+            let centerX = geometry.size.width / 2
+            let visibleTickCount = Int(ceil(geometry.size.width / tickSpacing / 2)) + 2
+
+            Canvas { context, size in
+                for relativeValue in -visibleTickCount...visibleTickCount {
+                    let value = selectedMinutes + relativeValue
+                    guard range.contains(value) else { continue }
+
+                    let x = centerX + CGFloat(relativeValue) * tickSpacing + offset
+                    let isMajor = value.isMultiple(of: 5)
+                    let tickTop: CGFloat = isMajor ? 24 : 32
+                    let tickBottom: CGFloat = 55
+
+                    var tick = Path()
+                    tick.move(to: CGPoint(x: x, y: tickTop))
+                    tick.addLine(to: CGPoint(x: x, y: tickBottom))
+                    context.stroke(
+                        tick,
+                        with: .color(.orange.opacity(isMajor ? 0.9 : 0.55)),
+                        lineWidth: isMajor ? 2 : 1
+                    )
+
+                    if isMajor {
+                        context.draw(
+                            Text("\(value)")
+                                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                .foregroundStyle(.orange.opacity(0.82)),
+                            at: CGPoint(x: x, y: 10),
+                            anchor: .center
+                        )
+                    }
+                }
+
+                var selectionTick = Path()
+                selectionTick.move(to: CGPoint(x: centerX, y: 22))
+                selectionTick.addLine(to: CGPoint(x: centerX, y: 57))
+                context.stroke(
+                    selectionTick,
+                    with: .color(.white.opacity(0.95)),
+                    style: StrokeStyle(lineWidth: 3, lineCap: .round)
+                )
+
+                var pointer = Path()
+                pointer.move(to: CGPoint(x: centerX, y: size.height - 5))
+                pointer.addLine(to: CGPoint(x: centerX - 6, y: size.height))
+                pointer.addLine(to: CGPoint(x: centerX + 6, y: size.height))
+                pointer.closeSubpath()
+                context.fill(pointer, with: .color(.orange))
+            }
+            .mask {
+                LinearGradient(
+                    stops: [
+                        .init(color: .clear, location: 0),
+                        .init(color: .white, location: 0.08),
+                        .init(color: .white, location: 0.92),
+                        .init(color: .clear, location: 1)
+                    ],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            }
+        }
+        .accessibilityHidden(true)
     }
 }
 
@@ -375,17 +456,9 @@ struct ClosedTimeActivityView: View {
                 .clipShape(RoundedRectangle(cornerRadius: MusicPlayerImageSizes.cornerRadiusInset.closed))
                 .accessibilityLabel("Media activity")
         } else if let snapshot = manager.snapshot {
-            HStack(spacing: 6) {
-                Image(systemName: snapshot.kind == .timer ? "timer" : "stopwatch.fill")
-                    .foregroundStyle(.orange)
-                Text(compactText(for: snapshot, at: date))
-                    .font(.system(size: 12, weight: .semibold, design: .rounded))
-                    .monospacedDigit()
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.65)
-                    .foregroundStyle(.orange)
-                    .contentTransition(.numericText())
-            }
+            Image(systemName: snapshot.kind == .timer ? "timer" : "stopwatch.fill")
+                .font(.system(size: 18, weight: .medium))
+                .foregroundStyle(.orange)
         }
     }
 
@@ -394,16 +467,13 @@ struct ClosedTimeActivityView: View {
         Group {
             if let snapshot = manager.snapshot {
                 if snapshot.phase == .finished {
-                    HStack(spacing: 5) {
-                        Image(systemName: "timer")
-                        Text("Done")
-                            .font(.system(size: 12, weight: .semibold))
-                    }
-                    .foregroundStyle(.orange)
+                    Text("Done")
+                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.orange)
                 } else if snapshot.kind == .timer {
-                    HStack(spacing: 5) {
-                        TimeProgressRing(snapshot: snapshot, date: date)
-                        if showMedia {
+                    if showMedia {
+                        HStack(spacing: 5) {
+                            TimeProgressRing(snapshot: snapshot, date: date)
                             Text(TimeActivityFormatter.timer(snapshot.remaining(at: date)))
                                 .font(.system(size: 11, weight: .semibold, design: .rounded))
                                 .monospacedDigit()
@@ -411,17 +481,29 @@ struct ClosedTimeActivityView: View {
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.7)
                         }
+                    } else {
+                        Text(TimeActivityFormatter.timer(snapshot.remaining(at: date)))
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                            .monospacedDigit()
+                            .foregroundStyle(.orange)
+                            .contentTransition(.numericText())
                     }
                 } else {
-                    HStack(spacing: 5) {
-                        Image(systemName: "stopwatch.fill")
-                        if showMedia {
+                    if showMedia {
+                        HStack(spacing: 5) {
+                            Image(systemName: "stopwatch.fill")
                             Text(TimeActivityFormatter.stopwatch(snapshot.elapsed(at: date), includesCentiseconds: false))
                                 .font(.system(size: 11, weight: .semibold, design: .rounded))
                                 .monospacedDigit()
                         }
+                        .foregroundStyle(.orange)
+                    } else {
+                        Text(TimeActivityFormatter.stopwatch(snapshot.elapsed(at: date), includesCentiseconds: false))
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                            .monospacedDigit()
+                            .foregroundStyle(.orange)
+                            .contentTransition(.numericText())
                     }
-                    .foregroundStyle(.orange)
                 }
             }
         }

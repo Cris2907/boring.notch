@@ -1,24 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "Activities page" : {
-      "extractionState" : "manual"
-    },
-    "Home page" : {
-      "extractionState" : "manual"
-    },
-    "Invert horizontal swipe direction" : {
-      "extractionState" : "manual"
-    },
-    "Media activity" : {
-      "extractionState" : "manual"
-    },
-    "Shelf page" : {
-      "extractionState" : "manual"
-    },
-    "Swipe horizontally with two fingers to move between Home, Activities, and Shelf. When direction is inverted, swiping right to left opens the tab on the right." : {
-      "extractionState" : "manual"
-    },
     "" : {
       "localizations" : {
         "ar" : {
@@ -218,9 +200,6 @@
           }
         }
       }
-    },
-    ":" : {
-
     },
     "'Now Playing' was the only option on previous versions and works with all media apps." : {
       "localizations" : {
@@ -1022,9 +1001,6 @@
         }
       }
     },
-    "%lldm" : {
-
-    },
     "• Bug fixes" : {
       "localizations" : {
         "ar" : {
@@ -1726,6 +1702,9 @@
       }
     },
     "Activities" : {
+      "extractionState" : "manual"
+    },
+    "Activities page" : {
       "extractionState" : "manual"
     },
     "Add" : {
@@ -11245,6 +11224,9 @@
         }
       }
     },
+    "Home page" : {
+      "extractionState" : "manual"
+    },
     "Hours" : {
       "extractionState" : "manual"
     },
@@ -11948,6 +11930,9 @@
           }
         }
       }
+    },
+    "Invert horizontal swipe direction" : {
+      "extractionState" : "manual"
     },
     "Layout Preview" : {
       "localizations" : {
@@ -13148,6 +13133,9 @@
           }
         }
       }
+    },
+    "Media activity" : {
+      "extractionState" : "manual"
     },
     "Media controls" : {
       "localizations" : {
@@ -18473,9 +18461,6 @@
         }
       }
     },
-    "Set timer for %lld minutes" : {
-
-    },
     "Settings" : {
       "localizations" : {
         "ar" : {
@@ -18675,6 +18660,9 @@
           }
         }
       }
+    },
+    "Shelf page" : {
+      "extractionState" : "manual"
     },
     "Shortcuts" : {
       "localizations" : {
@@ -20879,6 +20867,9 @@
     "Start" : {
       "extractionState" : "manual"
     },
+    "Start %lld minute timer" : {
+
+    },
     "Start stopwatch" : {
       "extractionState" : "manual"
     },
@@ -21092,6 +21083,12 @@
           }
         }
       }
+    },
+    "Swipe horizontally with three fingers to adjust the timer" : {
+
+    },
+    "Swipe horizontally with two fingers to move between Home, Activities, and Shelf. When direction is inverted, swiping right to left opens the tab on the right." : {
+      "extractionState" : "manual"
     },
     "System" : {
       "localizations" : {
@@ -21407,6 +21404,12 @@
     },
     "Timer Done" : {
       "extractionState" : "manual"
+    },
+    "Timer duration %lld minutes" : {
+
+    },
+    "Timer duration selector" : {
+
     },
     "Timer finished" : {
       "extractionState" : "manual"

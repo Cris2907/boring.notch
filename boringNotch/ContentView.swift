@@ -451,7 +451,7 @@ struct ContentView: View {
                             )
                             .opacity(
                                 (coordinator.expandingView.show
-                                    && Defaults[.sneakPeekStyles] == .inline)
+                                    && Defaults[ .sneakPeekStyles] == .inline)
                                     ? 1 : 0
                             )
                             Spacer(minLength: vm.closedNotchSize.width)
