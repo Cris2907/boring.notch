@@ -130,6 +130,7 @@ brew install --cask TheBoredTeam/boring-notch/boring-notch
 
 - Launch the app, and voilà—your notch is now the coolest part of your screen.
 - Hover over the notch to see it expand and reveal all its secrets.
+- When the closed clock or music live activity is visible, hovering that activity opens the related expanded space so you can jump straight into timers or playback controls.
 - Use the controls to manage your music like a rockstar.
 - Click the star in your menu bar to customize your notch to your heart's content.
 

@@ -16,9 +16,19 @@ Adds a built-in timer and stopwatch inside the notch so users can start and mana
 Details:
 - Lets users switch between timer and stopwatch modes from the Activities tab.
 - Shows active time sessions directly in the notch, including when the notch is closed.
+- When the closed clock activity is visible, hovering it opens the notch directly into the Activities space.
 - Supports timer adjustments with `Option` + two-finger horizontal swipe, plus configurable sensitivity and direction settings.
 
-## 3. Multi-Space Navigation With Two-Finger Gestures
+## 3. Hover-To-Open Live Activities
+
+Makes the closed live activity surfaces act like shortcuts into the expanded notch views.
+
+Details:
+- Hovering the music live activity opens the notch into the Home space, where playback controls are available.
+- Hovering the closed clock side activity opens the notch into the Activities space.
+- This works with the existing notch hover behavior, so users can move from a compact live activity to its expanded view without clicking.
+
+## 4. Multi-Space Navigation With Two-Finger Gestures
 
 Adds support for moving between notch tabs while using multiple macOS Spaces, using two-finger horizontal swipe gestures when the notch is open.
 
