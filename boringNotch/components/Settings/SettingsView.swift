@@ -39,6 +39,9 @@ struct SettingsView: View {
                 NavigationLink(value: "Calendar") {
                     Label("Calendar", systemImage: "calendar")
                 }
+                NavigationLink(value: "Clock") {
+                    Label("Clock", systemImage: "clock")
+                }
                 NavigationLink(value: "HUD") {
                     Label("HUDs", systemImage: "dial.medium.fill")
                 }
@@ -79,6 +82,8 @@ struct SettingsView: View {
                     Media()
                 case "Calendar":
                     CalendarSettings()
+                case "Clock":
+                    ClockSettings()
                 case "HUD":
                     HUD()
                 case "Battery":
@@ -124,6 +129,83 @@ struct SettingsView: View {
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("AccentColorChanged"))) { _ in
             accentColorUpdateTrigger = UUID()
         }
+    }
+}
+
+struct ClockSettings: View {
+    @Default(.timerDefaultMinutes) private var defaultTimerMinutes
+    @Default(.timerOptionSwipeAdjustment) private var optionSwipeAdjustment
+    @Default(.timerSwipeSensitivity) private var timerSwipeSensitivity
+
+    var body: some View {
+        Form {
+            Section {
+                Defaults.Toggle(key: .clockShowInClosedNotch) {
+                    Text("Show active timer or stopwatch when the notch is closed")
+                }
+            } header: {
+                Text("Clock activity")
+            }
+
+            Section {
+                Stepper(value: $defaultTimerMinutes, in: 1...120) {
+                    HStack {
+                        Text("Default duration")
+                        Spacer()
+                        Text("\(defaultTimerMinutes) min")
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                    }
+                }
+
+                Defaults.Toggle(key: .timerCompletionSound) {
+                    Text("Play a sound when the timer finishes")
+                }
+
+                Defaults.Toggle(key: .timerOptionSwipeAdjustment) {
+                    Text("Adjust duration with Option + two-finger swipe")
+                }
+
+                if optionSwipeAdjustment {
+                    Defaults.Toggle(key: .timerInvertSwipeDirection) {
+                        Text("Invert timer swipe direction")
+                    }
+
+                    Defaults.Toggle(key: .timerSwipeInertia) {
+                        Text("Continue scrolling with inertia")
+                    }
+
+                    Slider(value: $timerSwipeSensitivity, in: 8...32, step: 2) {
+                        HStack {
+                            Text("Swipe sensitivity")
+                            Spacer()
+                            Text(sensitivityLabel)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            } header: {
+                Text("Timer")
+            } footer: {
+                Text("Hold Option and move two fingers horizontally over the timer ruler. Turn off inversion to use classic scroll direction.")
+                    .foregroundStyle(.secondary)
+            }
+
+            Section {
+                Defaults.Toggle(key: .stopwatchShowCentiseconds) {
+                    Text("Show centiseconds while the stopwatch is open")
+                }
+            } header: {
+                Text("Stopwatch")
+            }
+        }
+        .navigationTitle("Clock")
+    }
+
+    private var sensitivityLabel: String {
+        if timerSwipeSensitivity <= 12 { return "High" }
+        if timerSwipeSensitivity <= 22 { return "Medium" }
+        return "Low"
     }
 }
 

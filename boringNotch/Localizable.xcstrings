@@ -201,9 +201,6 @@
         }
       }
     },
-    ":" : {
-
-    },
     "'Now Playing' was the only option on previous versions and works with all media apps." : {
       "localizations" : {
         "ar" : {
@@ -904,6 +901,9 @@
         }
       }
     },
+    "%lld min" : {
+
+    },
     "%lld%%" : {
       "localizations" : {
         "ar" : {
@@ -1003,9 +1003,6 @@
           }
         }
       }
-    },
-    "%lldm" : {
-
     },
     "• Bug fixes" : {
       "localizations" : {
@@ -2113,6 +2110,9 @@
           }
         }
       }
+    },
+    "Adjust duration with Option + two-finger swipe" : {
+
     },
     "Advanced" : {
       "localizations" : {
@@ -5318,6 +5318,12 @@
         }
       }
     },
+    "Clock" : {
+
+    },
+    "Clock activity" : {
+
+    },
     "Close" : {
       "localizations" : {
         "ar" : {
@@ -5919,6 +5925,9 @@
       }
     },
     "Connected" : {
+
+    },
+    "Continue scrolling with inertia" : {
 
     },
     "Continue" : {
@@ -7120,6 +7129,9 @@
           }
         }
       }
+    },
+    "Default duration" : {
+
     },
     "Description" : {
       "extractionState" : "stale",
@@ -11949,6 +11961,9 @@
     "Invert horizontal swipe direction" : {
       "extractionState" : "manual"
     },
+    "Invert timer swipe direction" : {
+
+    },
     "Layout Preview" : {
       "localizations" : {
         "ar" : {
@@ -14054,6 +14069,9 @@
           }
         }
       }
+    },
+    "Hold Option and move two fingers horizontally over the timer ruler. Turn off inversion to use classic scroll direction." : {
+
     },
     "Music Source" : {
       "localizations" : {
@@ -16261,6 +16279,9 @@
           }
         }
       }
+    },
+    "Play a sound when the timer finishes" : {
+
     },
     "Plugged In" : {
       "localizations" : {
@@ -18476,9 +18497,6 @@
         }
       }
     },
-    "Set timer for %lld minutes" : {
-
-    },
     "Settings" : {
       "localizations" : {
         "ar" : {
@@ -18782,6 +18800,9 @@
         }
       }
     },
+    "Show active timer or stopwatch when the notch is closed" : {
+
+    },
     "Show battery indicator" : {
       "localizations" : {
         "ar" : {
@@ -19081,6 +19102,9 @@
           }
         }
       }
+    },
+    "Show centiseconds while the stopwatch is open" : {
+
     },
     "Show cool face animation while inactive" : {
       "localizations" : {
@@ -20888,6 +20912,9 @@
     "Start" : {
       "extractionState" : "manual"
     },
+    "Start %lld minute timer" : {
+
+    },
     "Start stopwatch" : {
       "extractionState" : "manual"
     },
@@ -21102,8 +21129,14 @@
         }
       }
     },
+    "Hold Option and swipe horizontally with two fingers to adjust the timer" : {
+
+    },
     "Swipe horizontally with two fingers to move between Home, Activities, and Shelf. When direction is inverted, swiping right to left opens the tab on the right." : {
       "extractionState" : "manual"
+    },
+    "Swipe sensitivity" : {
+
     },
     "System" : {
       "localizations" : {
@@ -21419,6 +21452,12 @@
     },
     "Timer Done" : {
       "extractionState" : "manual"
+    },
+    "Timer duration %lld minutes" : {
+
+    },
+    "Timer duration selector" : {
+
     },
     "Timer finished" : {
       "extractionState" : "manual"
