@@ -1,24 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "Activities page" : {
-      "extractionState" : "manual"
-    },
-    "Home page" : {
-      "extractionState" : "manual"
-    },
-    "Invert horizontal swipe direction" : {
-      "extractionState" : "manual"
-    },
-    "Media activity" : {
-      "extractionState" : "manual"
-    },
-    "Shelf page" : {
-      "extractionState" : "manual"
-    },
-    "Swipe horizontally with two fingers to move between Home, Activities, and Shelf. When direction is inverted, swiping right to left opens the tab on the right." : {
-      "extractionState" : "manual"
-    },
     "" : {
       "localizations" : {
         "ar" : {
@@ -218,9 +200,6 @@
           }
         }
       }
-    },
-    ":" : {
-
     },
     "'Now Playing' was the only option on previous versions and works with all media apps." : {
       "localizations" : {
@@ -922,6 +901,9 @@
         }
       }
     },
+    "%lld min" : {
+
+    },
     "%lld%%" : {
       "localizations" : {
         "ar" : {
@@ -1021,9 +1003,6 @@
           }
         }
       }
-    },
-    "%lldm" : {
-
     },
     "• Bug fixes" : {
       "localizations" : {
@@ -1728,6 +1707,9 @@
     "Activities" : {
       "extractionState" : "manual"
     },
+    "Activities page" : {
+      "extractionState" : "manual"
+    },
     "Add" : {
       "localizations" : {
         "ar" : {
@@ -2128,6 +2110,9 @@
           }
         }
       }
+    },
+    "Adjust duration with Option + two-finger swipe" : {
+
     },
     "Advanced" : {
       "localizations" : {
@@ -5330,6 +5315,12 @@
         }
       }
     },
+    "Clock" : {
+
+    },
+    "Clock activity" : {
+
+    },
     "Close" : {
       "localizations" : {
         "ar" : {
@@ -5929,6 +5920,9 @@
           }
         }
       }
+    },
+    "Continue scrolling with inertia" : {
+
     },
     "Continue" : {
       "localizations" : {
@@ -7129,6 +7123,9 @@
           }
         }
       }
+    },
+    "Default duration" : {
+
     },
     "Description" : {
       "extractionState" : "stale",
@@ -11245,6 +11242,9 @@
         }
       }
     },
+    "Home page" : {
+      "extractionState" : "manual"
+    },
     "Hours" : {
       "extractionState" : "manual"
     },
@@ -11948,6 +11948,12 @@
           }
         }
       }
+    },
+    "Invert horizontal swipe direction" : {
+      "extractionState" : "manual"
+    },
+    "Invert timer swipe direction" : {
+
     },
     "Layout Preview" : {
       "localizations" : {
@@ -13149,6 +13155,9 @@
         }
       }
     },
+    "Media activity" : {
+      "extractionState" : "manual"
+    },
     "Media controls" : {
       "localizations" : {
         "ar" : {
@@ -14051,6 +14060,9 @@
           }
         }
       }
+    },
+    "Hold Option and move two fingers horizontally over the timer ruler. Turn off inversion to use classic scroll direction." : {
+
     },
     "Music Source" : {
       "localizations" : {
@@ -16258,6 +16270,9 @@
           }
         }
       }
+    },
+    "Play a sound when the timer finishes" : {
+
     },
     "Plugged In" : {
       "localizations" : {
@@ -18473,9 +18488,6 @@
         }
       }
     },
-    "Set timer for %lld minutes" : {
-
-    },
     "Settings" : {
       "localizations" : {
         "ar" : {
@@ -18676,6 +18688,9 @@
         }
       }
     },
+    "Shelf page" : {
+      "extractionState" : "manual"
+    },
     "Shortcuts" : {
       "localizations" : {
         "ar" : {
@@ -18775,6 +18790,9 @@
           }
         }
       }
+    },
+    "Show active timer or stopwatch when the notch is closed" : {
+
     },
     "Show battery indicator" : {
       "localizations" : {
@@ -19075,6 +19093,9 @@
           }
         }
       }
+    },
+    "Show centiseconds while the stopwatch is open" : {
+
     },
     "Show cool face animation while inactive" : {
       "localizations" : {
@@ -20879,6 +20900,9 @@
     "Start" : {
       "extractionState" : "manual"
     },
+    "Start %lld minute timer" : {
+
+    },
     "Start stopwatch" : {
       "extractionState" : "manual"
     },
@@ -21092,6 +21116,15 @@
           }
         }
       }
+    },
+    "Hold Option and swipe horizontally with two fingers to adjust the timer" : {
+
+    },
+    "Swipe horizontally with two fingers to move between Home, Activities, and Shelf. When direction is inverted, swiping right to left opens the tab on the right." : {
+      "extractionState" : "manual"
+    },
+    "Swipe sensitivity" : {
+
     },
     "System" : {
       "localizations" : {
@@ -21407,6 +21440,12 @@
     },
     "Timer Done" : {
       "extractionState" : "manual"
+    },
+    "Timer duration %lld minutes" : {
+
+    },
+    "Timer duration selector" : {
+
     },
     "Timer finished" : {
       "extractionState" : "manual"

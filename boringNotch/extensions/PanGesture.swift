@@ -114,6 +114,180 @@ extension View {
             )
         )
     }
+
+    /// Handles precise horizontal scrolling only while Option is held. This keeps
+    /// the gesture separate from normal two-finger tab navigation.
+    func optionHorizontalTrackpadSwipe(
+        isEnabled: Bool,
+        allowsInertia: Bool,
+        action: @escaping (CGFloat, NSEvent.Phase) -> Void
+    ) -> some View {
+        background(
+            OptionHorizontalTrackpadSwipeMonitor(
+                isEnabled: isEnabled,
+                allowsInertia: allowsInertia,
+                action: action
+            )
+        )
+    }
+}
+
+private struct OptionHorizontalTrackpadSwipeMonitor: NSViewRepresentable {
+    let isEnabled: Bool
+    let allowsInertia: Bool
+    let action: (CGFloat, NSEvent.Phase) -> Void
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        context.coordinator.installMonitor(on: view)
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        context.coordinator.update(
+            isEnabled: isEnabled,
+            allowsInertia: allowsInertia,
+            action: action
+        )
+    }
+
+    static func dismantleNSView(_ nsView: NSView, coordinator: Coordinator) {
+        coordinator.removeMonitor()
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(
+            isEnabled: isEnabled,
+            allowsInertia: allowsInertia,
+            action: action
+        )
+    }
+
+    @MainActor final class Coordinator: NSObject {
+        private var isEnabled: Bool
+        private var allowsInertia: Bool
+        private var action: (CGFloat, NSEvent.Phase) -> Void
+        private var monitor: Any?
+        private weak var monitoredView: NSView?
+        private var endTask: Task<Void, Never>?
+        private var isTracking = false
+
+        init(
+            isEnabled: Bool,
+            allowsInertia: Bool,
+            action: @escaping (CGFloat, NSEvent.Phase) -> Void
+        ) {
+            self.isEnabled = isEnabled
+            self.allowsInertia = allowsInertia
+            self.action = action
+        }
+
+        func update(
+            isEnabled: Bool,
+            allowsInertia: Bool,
+            action: @escaping (CGFloat, NSEvent.Phase) -> Void
+        ) {
+            if (self.isEnabled && !isEnabled) || (self.allowsInertia && !allowsInertia && isTracking) {
+                finishGesture(phase: .cancelled)
+            }
+            self.isEnabled = isEnabled
+            self.allowsInertia = allowsInertia
+            self.action = action
+        }
+
+        func installMonitor(on view: NSView) {
+            removeMonitor()
+            monitoredView = view
+            monitor = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { [weak self] event in
+                guard let self else { return event }
+                return self.handleScroll(event) ? nil : event
+            }
+        }
+
+        func removeMonitor() {
+            if let monitor {
+                NSEvent.removeMonitor(monitor)
+                self.monitor = nil
+            }
+            finishGesture(phase: .cancelled)
+            monitoredView = nil
+        }
+
+        private func handleScroll(_ event: NSEvent) -> Bool {
+            guard let view = monitoredView,
+                  event.window === view.window
+            else { return false }
+
+            if event.momentumPhase == .cancelled || event.momentumPhase == .ended {
+                let wasTracking = isTracking
+                finishGesture(phase: event.momentumPhase == .cancelled ? .cancelled : .ended)
+                return wasTracking
+            }
+
+            if !event.momentumPhase.isEmpty {
+                guard isEnabled,
+                      allowsInertia,
+                      isTracking,
+                      event.hasPreciseScrollingDeltas
+                else { return false }
+                return applyDelta(from: event)
+            }
+
+            if event.phase == .ended || event.phase == .cancelled {
+                let wasTracking = isTracking
+                if event.phase == .cancelled || !allowsInertia {
+                    finishGesture(phase: event.phase == .cancelled ? .cancelled : .ended)
+                } else {
+                    scheduleEndTimeout()
+                }
+                return wasTracking
+            }
+
+            let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            guard isEnabled,
+                  modifiers.contains(.option),
+                  event.hasPreciseScrollingDeltas
+            else { return false }
+
+            if !isTracking {
+                isTracking = true
+                action(0, .began)
+            }
+
+            return applyDelta(from: event)
+        }
+
+        private func applyDelta(from event: NSEvent) -> Bool {
+            let absDX = abs(event.scrollingDeltaX)
+            let absDY = abs(event.scrollingDeltaY)
+            guard absDX >= 1.5 * absDY, absDX > 0.2 else { return false }
+
+            let physicalDelta = event.isDirectionInvertedFromDevice
+                ? -event.scrollingDeltaX
+                : event.scrollingDeltaX
+            action(physicalDelta, .changed)
+            scheduleEndTimeout()
+            return true
+        }
+
+        private func scheduleEndTimeout() {
+            endTask?.cancel()
+            endTask = Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(250))
+                guard !Task.isCancelled else { return }
+                finishGesture(phase: .ended)
+            }
+        }
+
+        private func finishGesture(phase: NSEvent.Phase) {
+            endTask?.cancel()
+            endTask = nil
+            if isTracking {
+                action(0, phase)
+            }
+            isTracking = false
+        }
+    }
 }
 
 private struct HorizontalTrackpadSwipeMonitor: NSViewRepresentable {
@@ -202,6 +376,10 @@ private struct HorizontalTrackpadSwipeMonitor: NSViewRepresentable {
                   event.hasPreciseScrollingDeltas,
                   event.momentumPhase.isEmpty
             else { return }
+
+            // Option + horizontal scroll is reserved for controls inside the
+            // current tab (for example, the timer ruler).
+            guard !event.modifierFlags.contains(.option) else { return }
 
             if event.phase == .began {
                 accumulator.reset()

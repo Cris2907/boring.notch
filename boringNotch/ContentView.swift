@@ -37,6 +37,7 @@ struct ContentView: View {
     @Default(.useMusicVisualizer) var useMusicVisualizer
 
     @Default(.showNotHumanFace) var showNotHumanFace
+    @Default(.clockShowInClosedNotch) var clockShowInClosedNotch
 
     // Shared interactive spring for movement/resizing to avoid conflicting animations
     private let animationSpring = Animation.interactiveSpring(response: 0.38, dampingFraction: 0.8, blendDuration: 0)
@@ -69,7 +70,9 @@ struct ContentView: View {
         } else if shouldShowMediaActivity && vm.notchState == .closed && !vm.hideOnClosed
         {
             chinWidth += (2 * max(0, vm.effectiveClosedNotchHeight - 12) + 20)
-        } else if timeActivityManager.hasSession && vm.notchState == .closed && !vm.hideOnClosed {
+        } else if clockShowInClosedNotch && timeActivityManager.hasSession
+            && vm.notchState == .closed && !vm.hideOnClosed
+        {
             chinWidth += 176
         } else if !coordinator.expandingView.show && vm.notchState == .closed
             && (!musicManager.isPlaying && musicManager.isPlayerIdle) && Defaults[.showNotHumanFace]
@@ -127,7 +130,7 @@ struct ContentView: View {
                 mainLayout
                     .frame(height: vm.notchState == .open ? vm.notchSize.height : nil)
                     .conditionalModifier(true) { view in
-                        let openAnimation = Animation.spring(response: 0.42, dampingFraction: 0.8, blendDuration: 0)
+                        let openAnimation = Animation.spring(response: 0.42, dampingFraction: 0.76, blendDuration: 0)
                         let closeAnimation = Animation.spring(response: 0.45, dampingFraction: 1.0, blendDuration: 0)
                         
                         return view
@@ -306,7 +309,7 @@ struct ContentView: View {
                           Rectangle()
                               .fill(.clear)
                               .frame(width: vm.closedNotchSize.width - 20, height: vm.effectiveClosedNotchHeight)
-                      } else if timeActivityManager.hasSession && vm.notchState == .closed && !vm.hideOnClosed {
+                      } else if clockShowInClosedNotch && timeActivityManager.hasSession && vm.notchState == .closed && !vm.hideOnClosed {
                           ClosedTimeActivityView(
                               showMedia: shouldShowMediaActivity,
                               albumArtNamespace: albumArtNamespace
@@ -451,7 +454,7 @@ struct ContentView: View {
                             )
                             .opacity(
                                 (coordinator.expandingView.show
-                                    && Defaults[.sneakPeekStyles] == .inline)
+                                    && Defaults[ .sneakPeekStyles] == .inline)
                                     ? 1 : 0
                             )
                             Spacer(minLength: vm.closedNotchSize.width)
