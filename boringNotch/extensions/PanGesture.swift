@@ -215,9 +215,6 @@ private struct OptionHorizontalTrackpadSwipeMonitor: NSViewRepresentable {
                   event.momentumPhase.isEmpty
             else { return false }
 
-            let location = view.convert(event.locationInWindow, from: nil)
-            guard view.bounds.contains(location) else { return false }
-
             let absDX = abs(event.scrollingDeltaX)
             let absDY = abs(event.scrollingDeltaY)
             guard absDX >= 1.5 * absDY, absDX > 0.2 else { return false }
