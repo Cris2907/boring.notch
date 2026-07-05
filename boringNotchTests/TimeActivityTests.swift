@@ -219,6 +219,19 @@ final class CalendarMonthLayoutTests: XCTestCase {
     }
 }
 
+final class OpenNotchHeightTests: XCTestCase {
+    func testOpenNotchHeightUsesBaseAndMaximumBounds() {
+        XCTAssertEqual(clampedOpenNotchHeight(openNotchSize.height - 20), openNotchSize.height)
+        XCTAssertEqual(clampedOpenNotchHeight(calendarOpenNotchHeight), calendarOpenNotchHeight)
+        XCTAssertEqual(clampedOpenNotchHeight(maximumOpenNotchHeight + 20), maximumOpenNotchHeight)
+        XCTAssertEqual(notchWindowHeight(for: openNotchSize.height), windowSize.height)
+        XCTAssertEqual(
+            notchWindowHeight(for: calendarOpenNotchHeight),
+            calendarOpenNotchHeight + shadowPadding
+        )
+    }
+}
+
 final class TimeActivityManagerTests: XCTestCase {
     private var defaults: UserDefaults!
     private var suiteName: String!
