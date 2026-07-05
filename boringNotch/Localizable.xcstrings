@@ -21143,6 +21143,9 @@
     "Swipe horizontally with two fingers to move between Home, Activities, and Shelf. When direction is inverted, swiping right to left opens the tab on the right." : {
       "extractionState" : "manual"
     },
+    "Swipe horizontally with two fingers to move between Home, Calendar, Activities, and Shelf. When direction is inverted, swiping right to left opens the tab on the right." : {
+
+    },
     "Swipe sensitivity" : {
 
     },
@@ -21569,6 +21572,9 @@
           }
         }
       }
+    },
+    "Tint selected tab icons" : {
+
     },
     "Toggle Notch Open:" : {
       "localizations" : {

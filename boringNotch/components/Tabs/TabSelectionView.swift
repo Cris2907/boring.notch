@@ -47,6 +47,7 @@ struct TabSelectionView: View {
     @ObservedObject var coordinator = BoringViewCoordinator.shared
     @Default(.showCalendar) private var showCalendar
     @Default(.boringShelf) private var boringShelf
+    @Default(.tintedTabIcons) private var tintedTabIcons
     @Namespace var animation
     var body: some View {
         HStack(spacing: 0) {
@@ -57,7 +58,7 @@ struct TabSelectionView: View {
                         }
                     }
                     .frame(height: 26)
-                    .foregroundStyle(tab.view == coordinator.currentView ? .white : .gray)
+                    .foregroundStyle(iconColor(for: tab.view))
                     .background {
                         if tab.view == coordinator.currentView {
                             Capsule()
@@ -78,6 +79,11 @@ struct TabSelectionView: View {
     private var visibleTabs: [TabModel] {
         visibleNotchViews(showCalendar: showCalendar, includesShelf: boringShelf)
             .compactMap { view in tabs.first { $0.view == view } }
+    }
+
+    private func iconColor(for view: NotchViews) -> Color {
+        guard view == coordinator.currentView else { return .gray }
+        return tintedTabIcons ? view.tabTintColor : .white
     }
 }
 
@@ -107,11 +113,20 @@ struct NotchPaginationDots: View {
                 .accessibilityLabel(page.accessibilityLabel)
             }
         }
+        .padding(.vertical, 4)
         .frame(maxWidth: .infinity)
     }
 }
 
 private extension NotchViews {
+    var tabTintColor: Color {
+        switch self {
+        case .home, .shelf: return .blue
+        case .calendar: return .red
+        case .activities: return .orange
+        }
+    }
+
     var accessibilityLabel: String {
         switch self {
         case .home: return "Home page"

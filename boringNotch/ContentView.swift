@@ -427,7 +427,7 @@ struct ContentView: View {
                     .frame(maxHeight: .infinity)
 
                     NotchPaginationDots()
-                        .frame(height: 10)
+                        .frame(height: 18)
                 }
                 .id(coordinator.currentView)
                 .transition(
