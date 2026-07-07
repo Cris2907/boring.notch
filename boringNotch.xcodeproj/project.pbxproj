@@ -124,6 +124,11 @@
 		C1A100032F00000100000001 /* ExampleActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A100132F00000100000001 /* ExampleActivity.swift */; };
 		C1A100042F00000100000001 /* ActivityArchitectureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A100142F00000100000001 /* ActivityArchitectureTests.swift */; };
 		C1A100052F00000100000001 /* CalendarActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A100152F00000100000001 /* CalendarActivity.swift */; };
+		C1A200012F00000100000001 /* PomodoroActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A200112F00000100000001 /* PomodoroActivity.swift */; };
+		C1A200022F00000100000001 /* PomodoroSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A200122F00000100000001 /* PomodoroSession.swift */; };
+		C1A200032F00000100000001 /* PomodoroManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A200132F00000100000001 /* PomodoroManager.swift */; };
+		C1A200042F00000100000001 /* PomodoroActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A200142F00000100000001 /* PomodoroActivityView.swift */; };
+		C1A200052F00000100000001 /* PomodoroActivityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A200152F00000100000001 /* PomodoroActivityTests.swift */; };
 		B10348D92C74E56000475897 /* ConditionalModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10348D82C74E56000475897 /* ConditionalModifier.swift */; };
 		B10F84A32C6C9596009F3026 /* TestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10F84A22C6C9596009F3026 /* TestView.swift */; };
 		B141C2412CA5F53F00AC8CC8 /* SparkleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B141C2402CA5F53E00AC8CC8 /* SparkleView.swift */; };
@@ -344,6 +349,11 @@
 		C1A100132F00000100000001 /* ExampleActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleActivity.swift; sourceTree = "<group>"; };
 		C1A100142F00000100000001 /* ActivityArchitectureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityArchitectureTests.swift; sourceTree = "<group>"; };
 		C1A100152F00000100000001 /* CalendarActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarActivity.swift; sourceTree = "<group>"; };
+		C1A200112F00000100000001 /* PomodoroActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PomodoroActivity.swift; sourceTree = "<group>"; };
+		C1A200122F00000100000001 /* PomodoroSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PomodoroSession.swift; sourceTree = "<group>"; };
+		C1A200132F00000100000001 /* PomodoroManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PomodoroManager.swift; sourceTree = "<group>"; };
+		C1A200142F00000100000001 /* PomodoroActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PomodoroActivityView.swift; sourceTree = "<group>"; };
+		C1A200152F00000100000001 /* PomodoroActivityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PomodoroActivityTests.swift; sourceTree = "<group>"; };
 		F38DE6472D8243E2008B5C6D /* BatteryActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryActivityManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -530,6 +540,7 @@
 		1471639B2C5D362F0068B555 /* components */ = {
 			isa = PBXGroup;
 			children = (
+				C1A200202F00000100000001 /* Pomodoro */,
 				A10000070000000000000001 /* Time */,
 				B141C23B2CA5F50900AC8CC8 /* Onboarding */,
 				B1C448992C97375A001F0858 /* Tips */,
@@ -555,6 +566,7 @@
 		147163B52C5D804B0068B555 /* managers */ = {
 			isa = PBXGroup;
 			children = (
+				C1A200132F00000100000001 /* PomodoroManager.swift */,
 				A10000030000000000000001 /* TimeActivityManager.swift */,
 				11D58EA12E760AE100FA8377 /* ImageService.swift */,
 				F38DE6472D8243E2008B5C6D /* BatteryActivityManager.swift */,
@@ -677,6 +689,7 @@
 		14D570C72C5F38760011E668 /* models */ = {
 			isa = PBXGroup;
 			children = (
+				C1A200122F00000100000001 /* PomodoroSession.swift */,
 				A10000010000000000000001 /* TimeActivity.swift */,
 				11F748812ECB07A400F841DB /* MusicControlButton.swift */,
 				118D1FD02E98FF5F00A2FF63 /* SharingStateManager.swift */,
@@ -722,6 +735,7 @@
 		A10000130000000000000001 /* boringNotchTests */ = {
 			isa = PBXGroup;
 			children = (
+				C1A200152F00000100000001 /* PomodoroActivityTests.swift */,
 				C1A100142F00000100000001 /* ActivityArchitectureTests.swift */,
 				A10000100000000000000001 /* TimeActivityTests.swift */,
 				C0DEB1000000000000000015 /* BluetoothHeadphoneProfileTests.swift */,
@@ -749,8 +763,17 @@
 				C1A100122F00000100000001 /* ActivityRegistry.swift */,
 				C1A100132F00000100000001 /* ExampleActivity.swift */,
 				C1A100152F00000100000001 /* CalendarActivity.swift */,
+				C1A200112F00000100000001 /* PomodoroActivity.swift */,
 			);
 			path = activities;
+			sourceTree = "<group>";
+		};
+		C1A200202F00000100000001 /* Pomodoro */ = {
+			isa = PBXGroup;
+			children = (
+				C1A200142F00000100000001 /* PomodoroActivityView.swift */,
+			);
+			path = Pomodoro;
 			sourceTree = "<group>";
 		};
 		B15063502C63D3F600EBB0E3 /* extensions */ = {
@@ -1020,6 +1043,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C1A200012F00000100000001 /* PomodoroActivity.swift in Sources */,
+				C1A200022F00000100000001 /* PomodoroSession.swift in Sources */,
+				C1A200032F00000100000001 /* PomodoroManager.swift in Sources */,
+				C1A200042F00000100000001 /* PomodoroActivityView.swift in Sources */,
 				C1A100012F00000100000001 /* NotchActivity.swift in Sources */,
 				C1A100022F00000100000001 /* ActivityRegistry.swift in Sources */,
 				C1A100032F00000100000001 /* ExampleActivity.swift in Sources */,
@@ -1152,6 +1179,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C1A200052F00000100000001 /* PomodoroActivityTests.swift in Sources */,
 				C1A100042F00000100000001 /* ActivityArchitectureTests.swift in Sources */,
 				A10000110000000000000001 /* TimeActivityTests.swift in Sources */,
 				C0DEB1000000000000000005 /* BluetoothHeadphoneProfileTests.swift in Sources */,

@@ -39,6 +39,9 @@ struct SettingsView: View {
                 NavigationLink(value: "Calendar") {
                     Label("Calendar", systemImage: "calendar")
                 }
+                NavigationLink(value: "Pomodoro") {
+                    Label("Pomodoro", systemImage: "timer")
+                }
                 NavigationLink(value: "Clock") {
                     Label("Clock", systemImage: "clock")
                 }
@@ -82,6 +85,8 @@ struct SettingsView: View {
                     Media()
                 case "Calendar":
                     ActivityConfigurationView(activityID: .calendar)
+                case "Pomodoro":
+                    ActivityConfigurationView(activityID: .pomodoro)
                 case "Clock":
                     ClockSettings()
                 case "HUD":

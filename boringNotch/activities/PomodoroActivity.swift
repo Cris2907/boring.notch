@@ -1,0 +1,44 @@
+import Combine
+import SwiftUI
+
+extension ActivityID {
+    static let pomodoro = ActivityID("builtin.pomodoro")
+}
+
+@MainActor
+final class PomodoroActivity: NotchActivity {
+    static let activityID = ActivityID.pomodoro
+
+    let id = activityID
+    let metadata = ActivityMetadata(
+        name: String(localized: "Pomodoro"),
+        systemImage: "timer",
+        tint: .red
+    )
+
+    private let manager: PomodoroManager
+    private var managerObservation: AnyCancellable?
+
+    init(manager: PomodoroManager? = nil) {
+        self.manager = manager ?? .shared
+        managerObservation = self.manager.objectWillChange.sink { [weak self] _ in
+            self?.objectWillChange.send()
+        }
+    }
+
+    var isActive: Bool { manager.isActive }
+    var supportsCompactPresentation: Bool { true }
+    var supportsConfiguration: Bool { true }
+
+    func makeExpandedView() -> some View {
+        PomodoroActivityView(manager: manager)
+    }
+
+    func makeCompactView() -> some View {
+        PomodoroCompactView(manager: manager)
+    }
+
+    func makeConfigurationView() -> some View {
+        PomodoroSettingsView()
+    }
+}

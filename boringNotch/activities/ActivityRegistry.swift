@@ -40,6 +40,7 @@ final class ActivityRegistry: ObservableObject {
         do {
             return try ActivityRegistry {
                 CalendarActivity()
+                PomodoroActivity()
             }
         } catch {
             preconditionFailure("Invalid default activity registry: \(error)")

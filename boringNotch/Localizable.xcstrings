@@ -23780,6 +23780,52 @@
           }
         }
       }
+    },
+    "%@, %@ remaining" : {
+    },
+    "%lld focuses completed" : {
+    },
+    "1 focus completed" : {
+    },
+    "Automatically start next session" : {
+    },
+    "Cycle" : {
+    },
+    "Duration changes apply to the next session, not one already running or paused." : {
+    },
+    "Durations" : {
+    },
+    "Focus" : {
+    },
+    "Focuses before long break" : {
+    },
+    "Long Break" : {
+    },
+    "Long break" : {
+    },
+    "Pause Pomodoro" : {
+    },
+    "Paused" : {
+    },
+    "Pomodoro" : {
+    },
+    "Pomodoro controls" : {
+    },
+    "Ready" : {
+    },
+    "Reset Pomodoro" : {
+    },
+    "Resume Pomodoro" : {
+    },
+    "Short Break" : {
+    },
+    "Short break" : {
+    },
+    "Skip session" : {
+    },
+    "Start next session" : {
+    },
+    "Start Pomodoro" : {
     }
   },
   "version" : "1.0"

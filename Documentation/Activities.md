@@ -18,6 +18,12 @@ Every activity provides:
 
 Compact presentation, configuration, and appearance lifecycle callbacks are optional.
 
+## When a feature should be an Activity
+
+Use a `NotchActivity` when a feature has its own meaningful expanded experience and navigation identity, usually with state, lifecycle behavior, or optional configuration of its own. Pomodoro belongs in the Activity architecture because it has a dedicated expanded interface, persistent session state, timing behavior, and user-configurable cycles.
+
+Minor controls, status indicators, transient notifications, overlays, and internal implementation details should not automatically become activities. Those should remain part of their owning feature or the existing closed-notch/HUD infrastructure.
+
 ## Registration and navigation
 
 Production activities are registered in the source-defined builder in `ActivityRegistry.shared`:
@@ -28,6 +34,8 @@ return try ActivityRegistry {
     MyActivity()
 }
 ```
+
+Use namespaced permanent identifiers. Built-in activities use `builtin.<activity>` and community activities use `community.<publisher>.<activity>`. For example, Pomodoro uses `builtin.pomodoro`. Never rename an identifier after release.
 
 Registration order controls activity order between Home and the legacy Activities page. Duplicate IDs prevent registry creation. An activity whose `isAvailable` value is false remains registered but is removed from tabs, pagination, and swipe navigation. If the selected activity becomes unavailable, navigation falls back to Home.
 
@@ -48,6 +56,8 @@ func makeCompactView() -> some View {
 ```
 
 The current closed-notch shell still owns the established priority between battery, Bluetooth, HUD, timer, music, and idle content. Registering an activity does not automatically insert its compact view into that chain yet. Compact integration should be added when an existing compact feature is migrated and its priority and sizing behavior can be preserved explicitly.
+
+Pomodoro provides a compact view as a future integration example, but it is intentionally disconnected from production closed-notch rendering until that priority policy is exposed through the Activity architecture.
 
 ## State and lifecycle
 

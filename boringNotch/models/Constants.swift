@@ -134,6 +134,28 @@ extension Defaults.Keys {
     static let timerSwipeInertia = Key<Bool>("timerSwipeInertia", default: true)
     static let timerSwipeSensitivity = Key<CGFloat>("timerSwipeSensitivity", default: 18)
     static let stopwatchShowCentiseconds = Key<Bool>("stopwatchShowCentiseconds", default: true)
+
+    // MARK: Pomodoro
+    static let pomodoroFocusMinutes = Key<Int>(
+        "pomodoroFocusMinutes",
+        default: PomodoroConfiguration.defaultFocusMinutes
+    )
+    static let pomodoroShortBreakMinutes = Key<Int>(
+        "pomodoroShortBreakMinutes",
+        default: PomodoroConfiguration.defaultShortBreakMinutes
+    )
+    static let pomodoroLongBreakMinutes = Key<Int>(
+        "pomodoroLongBreakMinutes",
+        default: PomodoroConfiguration.defaultLongBreakMinutes
+    )
+    static let pomodoroFocusSessionsBeforeLongBreak = Key<Int>(
+        "pomodoroFocusSessionsBeforeLongBreak",
+        default: PomodoroConfiguration.defaultFocusSessionsBeforeLongBreak
+    )
+    static let pomodoroAutoStartNextSession = Key<Bool>(
+        "pomodoroAutoStartNextSession",
+        default: false
+    )
     
     // MARK: Media playback
     static let coloredSpectrogram = Key<Bool>("coloredSpectrogram", default: true)
