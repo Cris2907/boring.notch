@@ -26,6 +26,7 @@ struct ContentView: View {
     @ObservedObject var bluetoothAudioManager = BluetoothAudioManager.shared
     @ObservedObject var timeActivityManager = TimeActivityManager.shared
     @ObservedObject private var activityRegistry = ActivityRegistry.shared
+    @ObservedObject private var activityLivePresentationCoordinator = ActivityLivePresentationCoordinator.shared
     @State private var hoverTask: Task<Void, Never>?
     @State private var isHovering: Bool = false
     @State private var anyDropDebounceTask: Task<Void, Never>?
@@ -47,6 +48,7 @@ struct ContentView: View {
     private let extendedHoverPadding: CGFloat = 30
     private let zeroHeightHoverPadding: CGFloat = 10
     private let activityLivePresentationContentWidth: CGFloat = 64
+    private let activityMinimalLivePresentationContentWidth: CGFloat = 56
 
     private var requiredWindowHeight: CGFloat {
         notchWindowHeight(for: vm.notchSize.height)
@@ -68,7 +70,7 @@ struct ContentView: View {
     }
 
     private func computedChinWidth(
-        livePresentation: AnyNotchActivity?
+        livePresentationStack: ActivityLivePresentationStack
     ) -> CGFloat {
         var chinWidth: CGFloat = vm.closedNotchSize.width
 
@@ -91,13 +93,11 @@ struct ContentView: View {
                     + closedTimeActivityMinimumTextWidth
                     + 20
             )
-        } else if livePresentation != nil && vm.notchState == .closed && !vm.hideOnClosed
+        } else if let livePresentationWidth = activityLivePresentationAdditionalWidth(
+            for: livePresentationStack
+        ), vm.notchState == .closed && !vm.hideOnClosed
         {
-            chinWidth += (
-                max(0, vm.effectiveClosedNotchHeight - 12)
-                    + activityLivePresentationContentWidth
-                    + 20
-            )
+            chinWidth += livePresentationWidth
         } else if shouldShowMediaActivity && vm.notchState == .closed && !vm.hideOnClosed
         {
             chinWidth += (2 * max(0, vm.effectiveClosedNotchHeight - 12) + 20)
@@ -109,6 +109,21 @@ struct ContentView: View {
         }
 
         return chinWidth
+    }
+
+    private func activityLivePresentationAdditionalWidth(
+        for stack: ActivityLivePresentationStack
+    ) -> CGFloat? {
+        let accessorySize = max(0, vm.effectiveClosedNotchHeight - 12)
+
+        switch stack {
+        case .none:
+            return nil
+        case .full:
+            return accessorySize + activityLivePresentationContentWidth + 20
+        case .split:
+            return 2 * (accessorySize + activityMinimalLivePresentationContentWidth) + 20
+        }
     }
 
     private var shouldShowMediaActivity: Bool {
@@ -124,8 +139,9 @@ struct ContentView: View {
     }
 
     var body: some View {
-        let livePresentation = selectedActivityLivePresentation(
-            from: activityRegistry.activities
+        let livePresentationStack = selectedActivityLivePresentationStack(
+            from: activityRegistry.activities,
+            snapshot: activityLivePresentationCoordinator.snapshot
         )
 
         // Calculate scale based on gesture progress only
@@ -137,7 +153,7 @@ struct ContentView: View {
         
         ZStack(alignment: .top) {
             VStack(spacing: 0) {
-                let mainLayout = NotchLayout(livePresentation: livePresentation)
+                let mainLayout = NotchLayout(livePresentationStack: livePresentationStack)
                     .frame(alignment: .top)
                     .padding(
                         .horizontal,
@@ -272,7 +288,7 @@ struct ContentView: View {
                     Rectangle()
                         .fill(Color.black.opacity(0.01))
                         .frame(
-                            width: computedChinWidth(livePresentation: livePresentation),
+                            width: computedChinWidth(livePresentationStack: livePresentationStack),
                             height: vm.chinHeight
                         )
                 }
@@ -320,7 +336,7 @@ struct ContentView: View {
     }
 
     @ViewBuilder
-    func NotchLayout(livePresentation: AnyNotchActivity?) -> some View {
+    func NotchLayout(livePresentationStack: ActivityLivePresentationStack) -> some View {
         VStack(alignment: .leading) {
             VStack(alignment: .leading) {
                 if coordinator.helloAnimationRunning {
@@ -382,14 +398,15 @@ struct ContentView: View {
                               albumArtNamespace: albumArtNamespace
                           )
                           .transition(.opacity)
-                      } else if let livePresentation,
+                      } else if livePresentationStack.isVisible,
                                 vm.notchState == .closed,
                                 !vm.hideOnClosed {
-                          ClosedActivityLivePresentationView(
-                              activity: livePresentation,
-                              contentWidth: activityLivePresentationContentWidth
+                          ClosedActivityLivePresentationStackView(
+                              stack: livePresentationStack,
+                              fullContentWidth: activityLivePresentationContentWidth,
+                              minimalContentWidth: activityMinimalLivePresentationContentWidth
                           )
-                          .id(livePresentation.id)
+                          .id(livePresentationStack.identity)
                           .transition(.opacity)
                       } else if shouldShowMediaActivity && vm.notchState == .closed && !vm.hideOnClosed {
                           MusicLiveActivity()
@@ -751,30 +768,31 @@ struct ContentView: View {
     }
 }
 
-@MainActor
-func selectedActivityLivePresentation(
-    from activities: [AnyNotchActivity]
-) -> AnyNotchActivity? {
-    var selection: AnyNotchActivity?
-    var selectedPriority: ActivityLivePresentationPriority?
+private struct ClosedActivityLivePresentationStackView: View {
+    let stack: ActivityLivePresentationStack
+    let fullContentWidth: CGFloat
+    let minimalContentWidth: CGFloat
 
-    for activity in activities where activity.isAvailable {
-        guard let priority = activity.livePresentationState.priority else { continue }
-        guard let currentPriority = selectedPriority else {
-            selection = activity
-            selectedPriority = priority
-            continue
-        }
-        if priority > currentPriority {
-            selection = activity
-            selectedPriority = priority
+    var body: some View {
+        switch stack {
+        case .none:
+            EmptyView()
+        case .full(let activity):
+            ClosedActivityFullLivePresentationView(
+                activity: activity,
+                contentWidth: fullContentWidth
+            )
+        case .split(let leading, let trailing):
+            ClosedActivitySplitLivePresentationView(
+                leadingActivity: leading,
+                trailingActivity: trailing,
+                contentWidth: minimalContentWidth
+            )
         }
     }
-
-    return selection
 }
 
-private struct ClosedActivityLivePresentationView: View {
+private struct ClosedActivityFullLivePresentationView: View {
     @EnvironmentObject private var vm: BoringViewModel
     @ObservedObject var activity: AnyNotchActivity
 
@@ -803,6 +821,95 @@ private struct ClosedActivityLivePresentationView: View {
                 .frame(width: contentWidth, alignment: .leading)
         }
         .frame(height: vm.effectiveClosedNotchHeight, alignment: .center)
+    }
+}
+
+private struct ClosedActivitySplitLivePresentationView: View {
+    @EnvironmentObject private var vm: BoringViewModel
+    @ObservedObject var leadingActivity: AnyNotchActivity
+    @ObservedObject var trailingActivity: AnyNotchActivity
+
+    let contentWidth: CGFloat
+
+    var body: some View {
+        HStack(spacing: 8) {
+            ClosedActivityMinimalLivePresentationView(
+                activity: leadingActivity,
+                contentWidth: contentWidth,
+                iconPlacement: .trailing,
+                alignment: .trailing
+            )
+
+            Rectangle()
+                .fill(.black)
+                .frame(
+                    width: max(
+                        0,
+                        vm.closedNotchSize.width - cornerRadiusInsets.closed.top
+                    )
+                )
+
+            ClosedActivityMinimalLivePresentationView(
+                activity: trailingActivity,
+                contentWidth: contentWidth,
+                iconPlacement: .leading,
+                alignment: .leading
+            )
+        }
+        .frame(height: vm.effectiveClosedNotchHeight, alignment: .center)
+    }
+}
+
+private struct ClosedActivityMinimalLivePresentationView: View {
+    @EnvironmentObject private var vm: BoringViewModel
+    @ObservedObject var activity: AnyNotchActivity
+
+    let contentWidth: CGFloat
+    let iconPlacement: ClosedActivityMinimalIconPlacement
+    let alignment: Alignment
+
+    var body: some View {
+        let accessorySize = max(0, vm.effectiveClosedNotchHeight - 12)
+
+        HStack(spacing: 6) {
+            if iconPlacement == .leading {
+                icon(accessorySize: accessorySize)
+            }
+
+            activity.makeMinimalLivePresentationView()
+                .frame(width: contentWidth, alignment: iconPlacement.contentAlignment)
+
+            if iconPlacement == .trailing {
+                icon(accessorySize: accessorySize)
+            }
+        }
+        .frame(
+            width: accessorySize + contentWidth + 6,
+            height: vm.effectiveClosedNotchHeight,
+            alignment: alignment
+        )
+    }
+
+    private func icon(accessorySize: CGFloat) -> some View {
+        Image(systemName: activity.metadata.systemImage)
+            .font(.system(size: 16, weight: .semibold))
+            .foregroundStyle(activity.metadata.tint)
+            .frame(width: accessorySize, height: accessorySize)
+            .accessibilityHidden(true)
+    }
+}
+
+private enum ClosedActivityMinimalIconPlacement {
+    case leading
+    case trailing
+
+    var contentAlignment: Alignment {
+        switch self {
+        case .leading:
+            return .leading
+        case .trailing:
+            return .trailing
+        }
     }
 }
 

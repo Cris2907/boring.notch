@@ -16,7 +16,7 @@ Every activity provides:
 - `isAvailable`, which determines whether it appears in activity navigation.
 - `isActive`, which represents ongoing work such as a running timer. It is independent of the currently selected page.
 
-Compact presentation, closed-notch live presentation, configuration, and appearance lifecycle callbacks are optional.
+Compact presentation, full closed-notch live presentation, minimal closed-notch live presentation, configuration, and appearance lifecycle callbacks are optional.
 
 ## When a feature should be an Activity
 
@@ -61,7 +61,14 @@ The current closed-notch shell still owns the established priority between batte
 
 ## Closed-notch live presentations
 
-Use a live presentation for contextual, ongoing information that should appear around the closed notch. Activities publish visibility explicitly; `isActive` does not make a live presentation visible automatically.
+Use live presentations for contextual, ongoing information that should appear around the closed notch. Activities publish visibility explicitly; `isActive` does not make a live presentation visible automatically.
+
+Activities can provide two closed-notch live views:
+
+- `makeLivePresentationView()` is the full live presentation. It is shown across both sides of the physical notch when this is the only selected registered live activity.
+- `makeMinimalLivePresentationView()` is the minimal live presentation. It is shown on one side of the physical notch when the activity shares the closed notch with another registered live activity.
+
+`makeMinimalLivePresentationView()` is additive. If an activity does not provide a dedicated minimal live view, the type-erased activity can reuse its existing live presentation. `makeCompactView()` remains a separate generic alternate presentation and is not used as the minimal live presentation.
 
 ```swift
 var livePresentationState: ActivityLivePresentationState {
@@ -71,9 +78,25 @@ var livePresentationState: ActivityLivePresentationState {
 func makeLivePresentationView() -> some View {
     RemainingTimeView()
 }
+
+func makeMinimalLivePresentationView() -> some View {
+    RemainingTimeView()
+}
 ```
 
-The available priorities are `.low`, `.normal`, and `.high`. The rendering boundary selects the visible, available activity with the highest priority. Registration order deterministically wins a tie. Priority only arbitrates between registered activities; the core retains control of system and legacy content. The current order is battery, Bluetooth, HUD, legacy Timer, the selected activity presentation, Media, then idle content.
+The available priorities are `.low`, `.normal`, and `.high`. Priority remains part of `ActivityLivePresentationState` for source compatibility and explicit visibility metadata, but priority no longer decides which registered live activities win the closed-notch stack. Among registered activities, recency decides selection.
+
+The closed-notch activity stack behaves as follows:
+
+- Zero eligible registered live activities: preserve the existing fallback behavior.
+- One eligible registered live activity: render its full live presentation.
+- Two or more eligible registered live activities: render the two most recently started activities using their minimal live presentations, one on each side of the physical notch.
+
+An activity is eligible for the live stack when `isAvailable == true` and `livePresentationState.priority != nil`. A live activity becomes started when it transitions from not eligible to eligible. That transition is detected by `ActivityLivePresentationCoordinator`, which subscribes to the existing activity change-forwarding path through `ActivityRegistry.objectWillChange` and reconciles previous eligibility against current eligibility centrally. Starts are not inferred from SwiftUI body evaluation, and the coordinator does not contain Pomodoro-specific logic.
+
+Recency is in memory for this iteration. If the app launches while activities are already eligible, the selector uses registry order as deterministic initial ordering. Hiding, ending, or making an activity unavailable removes it from current live selection and promotes the next most recent eligible activity. If an activity becomes eligible again later, it receives a new in-memory recency position.
+
+The rendering boundary remains pure: it receives registered activities plus the coordinator snapshot, filters available visible activities, sorts by recency, and returns no stack, a full stack, or a split stack. The core retains control of system and legacy content. The current order is battery, Bluetooth, HUD, legacy Timer, the registered activity live stack, Media, then idle content.
 
 The core supplies the metadata icon, physical-notch spacing, and fixed content dimensions. Live views must not resize the notch, change navigation, or reach into `ContentView`. Keep live content inexpensive: update only while its displayed data changes and derive elapsed time from timestamps rather than accumulated ticks.
 
@@ -89,7 +112,7 @@ Use SwiftUI state for presentation-local state:
 
 Use a manager for persistent sessions, system observers, services, or state shared across displays. Do not move those responsibilities into the registry. Activity instances are shared, while the app can create a notch window per display.
 
-Publish changes to `isAvailable` and `isActive`. Type erasure and the registry forward `objectWillChange` to navigation consumers.
+Publish changes to `isAvailable`, `isActive`, and `livePresentationState`. Type erasure and the registry forward `objectWillChange` to navigation consumers and to the live presentation coordinator. The coordinator owns in-memory live recency; individual activities should only publish their own availability and live visibility.
 
 Lifecycle callbacks are for work that genuinely follows visibility. They may run once per visible notch window, so implementations must be idempotent or reference-counted. Prefer normal SwiftUI `onAppear` and `onDisappear` inside activity views for view-local behavior.
 
@@ -112,7 +135,7 @@ func makeConfigurationView() -> some View {
 1. Create an `ObservableObject` conforming to `NotchActivity`.
 2. Choose a permanent ID and metadata.
 3. Return the expanded SwiftUI view.
-4. Add compact content, live presentation, configuration, or lifecycle callbacks only when needed.
+4. Add compact content, full live presentation, minimal live presentation, configuration, or lifecycle callbacks only when needed.
 5. Register the activity in `ActivityRegistry.shared`.
 6. Add the Swift file to the app target and add focused tests for ID, availability, state, and navigation behavior.
 7. Build and run the macOS tests.

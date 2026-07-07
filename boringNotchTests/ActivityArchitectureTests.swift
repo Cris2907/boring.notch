@@ -82,6 +82,7 @@ final class ActivityArchitectureTests: XCTestCase {
         let _: AnyView = erased.makeExpandedView()
         let _: AnyView = erased.makeCompactView()
         let _: AnyView = erased.makeLivePresentationView()
+        let _: AnyView = erased.makeMinimalLivePresentationView()
         XCTAssertTrue(erased.supportsCompactPresentation)
         XCTAssertEqual(erased.livePresentationState, .hidden)
         XCTAssertFalse(erased.supportsConfiguration)
@@ -109,29 +110,85 @@ final class ActivityArchitectureTests: XCTestCase {
             eligible
         }
 
-        XCTAssertEqual(
-            selectedActivityLivePresentation(from: registry.activities)?.id,
-            eligible.id
+        assertStack(
+            selectedActivityLivePresentationStack(from: registry.activities, snapshot: .empty),
+            contains: [eligible.id]
         )
     }
 
-    func testLiveSelectionUsesHighestPriority() throws {
-        let low = LiveTestActivity(id: "low", state: .visible(priority: .low))
-        let high = LiveTestActivity(id: "high", state: .visible(priority: .high))
-        let normal = LiveTestActivity(id: "normal", state: .visible(priority: .normal))
-        let registry = try ActivityRegistry {
-            low
-            high
-            normal
+    func testSingleEligibleLiveSelectionUsesFullPresentation() throws {
+        let activity = LiveTestActivity(id: "single", state: .visible(priority: .normal))
+        let registry = try ActivityRegistry { activity }
+
+        switch selectedActivityLivePresentationStack(from: registry.activities, snapshot: .empty) {
+        case .full(let selected):
+            XCTAssertEqual(selected.id, activity.id)
+        default:
+            XCTFail("Expected a single eligible activity to use the full live presentation")
         }
+    }
 
-        XCTAssertEqual(
-            selectedActivityLivePresentation(from: registry.activities)?.id,
-            high.id
+    func testLiveSelectionUsesRecencyInsteadOfPriority() throws {
+        let high = LiveTestActivity(id: "high", state: .visible(priority: .high))
+        let low = LiveTestActivity(id: "low", state: .visible(priority: .low))
+        let registry = try ActivityRegistry {
+            high
+            low
+        }
+        let snapshot = ActivityLivePresentationSnapshot(startedSequences: [
+            high.id: 1,
+            low.id: 2
+        ])
+
+        assertStack(
+            selectedActivityLivePresentationStack(from: registry.activities, snapshot: snapshot),
+            contains: [high.id, low.id]
         )
     }
 
-    func testEqualLivePrioritiesPreserveRegistrationOrder() throws {
+    func testTwoEligibleLiveActivitiesUseMinimalSplitWithNewestTrailing() throws {
+        let first = LiveTestActivity(id: "first", state: .visible(priority: .normal))
+        let second = LiveTestActivity(id: "second", state: .visible(priority: .normal))
+        let registry = try ActivityRegistry {
+            first
+            second
+        }
+        let snapshot = ActivityLivePresentationSnapshot(startedSequences: [
+            first.id: 1,
+            second.id: 2
+        ])
+
+        switch selectedActivityLivePresentationStack(from: registry.activities, snapshot: snapshot) {
+        case .split(let leading, let trailing):
+            XCTAssertEqual(leading.id, first.id)
+            XCTAssertEqual(trailing.id, second.id)
+        default:
+            XCTFail("Expected two eligible activities to use split minimal live presentations")
+        }
+    }
+
+    func testMoreThanTwoLiveActivitiesUseTwoMostRecent() throws {
+        let oldest = LiveTestActivity(id: "oldest", state: .visible(priority: .normal))
+        let newest = LiveTestActivity(id: "newest", state: .visible(priority: .normal))
+        let middle = LiveTestActivity(id: "middle", state: .visible(priority: .normal))
+        let registry = try ActivityRegistry {
+            oldest
+            newest
+            middle
+        }
+        let snapshot = ActivityLivePresentationSnapshot(startedSequences: [
+            oldest.id: 1,
+            newest.id: 3,
+            middle.id: 2
+        ])
+
+        assertStack(
+            selectedActivityLivePresentationStack(from: registry.activities, snapshot: snapshot),
+            contains: [middle.id, newest.id]
+        )
+    }
+
+    func testMissingRecencyFallsBackToRegistrationOrderDeterministically() throws {
         let first = LiveTestActivity(id: "first", state: .visible(priority: .normal))
         let second = LiveTestActivity(id: "second", state: .visible(priority: .normal))
         let registry = try ActivityRegistry {
@@ -139,9 +196,9 @@ final class ActivityArchitectureTests: XCTestCase {
             second
         }
 
-        XCTAssertEqual(
-            selectedActivityLivePresentation(from: registry.activities)?.id,
-            first.id
+        assertStack(
+            selectedActivityLivePresentationStack(from: registry.activities, snapshot: .empty),
+            contains: [second.id, first.id]
         )
     }
 
@@ -152,17 +209,175 @@ final class ActivityArchitectureTests: XCTestCase {
         var registryUpdates = 0
         let observation = registry.objectWillChange.sink { registryUpdates += 1 }
 
-        XCTAssertNil(selectedActivityLivePresentation(from: registry.activities))
+        assertStack(
+            selectedActivityLivePresentationStack(from: registry.activities, snapshot: .empty),
+            contains: []
+        )
         let _: AnyView = erased.makeLivePresentationView()
+        let _: AnyView = erased.makeMinimalLivePresentationView()
 
         activity.livePresentationState = .visible(priority: .normal)
 
-        XCTAssertEqual(
-            selectedActivityLivePresentation(from: registry.activities)?.id,
-            activity.id
+        assertStack(
+            selectedActivityLivePresentationStack(from: registry.activities, snapshot: .empty),
+            contains: [activity.id]
         )
         XCTAssertEqual(registryUpdates, 1)
         withExtendedLifetime(observation) {}
+    }
+
+    func testCoordinatorAssignsRecencyWhenActivityBecomesEligible() async throws {
+        let first = LiveTestActivity(id: "first", state: .hidden)
+        let second = LiveTestActivity(id: "second", state: .hidden)
+        let registry = try ActivityRegistry {
+            first
+            second
+        }
+        let coordinator = ActivityLivePresentationCoordinator(registry: registry)
+
+        first.livePresentationState = .visible(priority: .normal)
+        await coordinator.waitForPendingReconciliation()
+
+        second.livePresentationState = .visible(priority: .normal)
+        await coordinator.waitForPendingReconciliation()
+
+        XCTAssertLessThan(
+            try XCTUnwrap(coordinator.snapshot.startedSequence(for: first.id)),
+            try XCTUnwrap(coordinator.snapshot.startedSequence(for: second.id))
+        )
+        assertStack(
+            selectedActivityLivePresentationStack(
+                from: registry.activities,
+                snapshot: coordinator.snapshot
+            ),
+            contains: [first.id, second.id]
+        )
+    }
+
+    func testCoordinatorDoesNotRefreshRecencyForVisibleStateChanges() async throws {
+        let first = LiveTestActivity(id: "first", state: .hidden)
+        let second = LiveTestActivity(id: "second", state: .hidden)
+        let registry = try ActivityRegistry {
+            first
+            second
+        }
+        let coordinator = ActivityLivePresentationCoordinator(registry: registry)
+
+        first.livePresentationState = .visible(priority: .low)
+        await coordinator.waitForPendingReconciliation()
+        let originalSequence = try XCTUnwrap(coordinator.snapshot.startedSequence(for: first.id))
+
+        first.livePresentationState = .visible(priority: .high)
+        await coordinator.waitForPendingReconciliation()
+
+        XCTAssertEqual(coordinator.snapshot.startedSequence(for: first.id), originalSequence)
+
+        second.livePresentationState = .visible(priority: .normal)
+        await coordinator.waitForPendingReconciliation()
+
+        assertStack(
+            selectedActivityLivePresentationStack(
+                from: registry.activities,
+                snapshot: coordinator.snapshot
+            ),
+            contains: [first.id, second.id]
+        )
+    }
+
+    func testCoordinatorRemovesHiddenActivityAndPromotesNextMostRecent() async throws {
+        let first = LiveTestActivity(id: "first", state: .hidden)
+        let second = LiveTestActivity(id: "second", state: .hidden)
+        let third = LiveTestActivity(id: "third", state: .hidden)
+        let registry = try ActivityRegistry {
+            first
+            second
+            third
+        }
+        let coordinator = ActivityLivePresentationCoordinator(registry: registry)
+
+        first.livePresentationState = .visible(priority: .normal)
+        await coordinator.waitForPendingReconciliation()
+        second.livePresentationState = .visible(priority: .normal)
+        await coordinator.waitForPendingReconciliation()
+        third.livePresentationState = .visible(priority: .normal)
+        await coordinator.waitForPendingReconciliation()
+
+        assertStack(
+            selectedActivityLivePresentationStack(
+                from: registry.activities,
+                snapshot: coordinator.snapshot
+            ),
+            contains: [second.id, third.id]
+        )
+
+        third.livePresentationState = .hidden
+        await coordinator.waitForPendingReconciliation()
+
+        assertStack(
+            selectedActivityLivePresentationStack(
+                from: registry.activities,
+                snapshot: coordinator.snapshot
+            ),
+            contains: [first.id, second.id]
+        )
+        XCTAssertNil(coordinator.snapshot.startedSequence(for: third.id))
+    }
+
+    func testCoordinatorRemovesUnavailableActivityAndRestartsWhenAvailableAgain() async throws {
+        let first = LiveTestActivity(id: "first", state: .hidden)
+        let second = LiveTestActivity(id: "second", state: .hidden)
+        let registry = try ActivityRegistry {
+            first
+            second
+        }
+        let coordinator = ActivityLivePresentationCoordinator(registry: registry)
+
+        first.livePresentationState = .visible(priority: .normal)
+        await coordinator.waitForPendingReconciliation()
+        second.livePresentationState = .visible(priority: .normal)
+        await coordinator.waitForPendingReconciliation()
+
+        second.isAvailable = false
+        await coordinator.waitForPendingReconciliation()
+
+        assertStack(
+            selectedActivityLivePresentationStack(
+                from: registry.activities,
+                snapshot: coordinator.snapshot
+            ),
+            contains: [first.id]
+        )
+        XCTAssertNil(coordinator.snapshot.startedSequence(for: second.id))
+
+        second.isAvailable = true
+        await coordinator.waitForPendingReconciliation()
+
+        assertStack(
+            selectedActivityLivePresentationStack(
+                from: registry.activities,
+                snapshot: coordinator.snapshot
+            ),
+            contains: [first.id, second.id]
+        )
+    }
+
+    func testCoordinatorUsesRegistryOrderForActivitiesEligibleAtLaunch() throws {
+        let first = LiveTestActivity(id: "first", state: .visible(priority: .normal))
+        let second = LiveTestActivity(id: "second", state: .visible(priority: .normal))
+        let registry = try ActivityRegistry {
+            first
+            second
+        }
+        let coordinator = ActivityLivePresentationCoordinator(registry: registry)
+
+        XCTAssertTrue(coordinator.snapshot.startedSequences.isEmpty)
+        assertStack(
+            selectedActivityLivePresentationStack(
+                from: registry.activities,
+                snapshot: coordinator.snapshot
+            ),
+            contains: [second.id, first.id]
+        )
     }
 
     func testDefaultRegistryContainsCalendarMetadataAndConfiguration() throws {
@@ -173,6 +388,28 @@ final class ActivityArchitectureTests: XCTestCase {
         XCTAssertEqual(calendar.metadata.preferredExpandedHeight, calendarOpenNotchHeight)
         XCTAssertTrue(calendar.supportsConfiguration)
         XCTAssertFalse(calendar.supportsCompactPresentation)
+    }
+}
+
+@MainActor
+private func assertStack(
+    _ stack: ActivityLivePresentationStack,
+    contains expectedIDs: [ActivityID],
+    file: StaticString = #filePath,
+    line: UInt = #line
+) {
+    XCTAssertEqual(activityIDs(in: stack), expectedIDs, file: file, line: line)
+}
+
+@MainActor
+private func activityIDs(in stack: ActivityLivePresentationStack) -> [ActivityID] {
+    switch stack {
+    case .none:
+        return []
+    case .full(let activity):
+        return [activity.id]
+    case .split(let leading, let trailing):
+        return [leading.id, trailing.id]
     }
 }
 

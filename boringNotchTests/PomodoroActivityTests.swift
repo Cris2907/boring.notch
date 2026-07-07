@@ -88,9 +88,9 @@ final class PomodoroActivityTests: XCTestCase {
 
         XCTAssertEqual(activity.livePresentationState, .visible(priority: .low))
         XCTAssertEqual(manager.remaining(at: now), 7, accuracy: 0.001)
-        XCTAssertEqual(
-            selectedActivityLivePresentation(from: registry.activities)?.id,
-            .pomodoro
+        assertStack(
+            selectedActivityLivePresentationStack(from: registry.activities, snapshot: .empty),
+            contains: [.pomodoro]
         )
     }
 
@@ -241,6 +241,36 @@ final class PomodoroActivityTests: XCTestCase {
         XCTAssertTrue(restoredManager.isActive)
     }
 
+    func testCoordinatorSelectsAlreadyActivePomodoroAtLaunchAndRemovesOnReset() async throws {
+        let manager = makeManager()
+        manager.start()
+        manager.pause()
+        let registry = try ActivityRegistry {
+            PomodoroActivity(manager: manager)
+        }
+        let coordinator = ActivityLivePresentationCoordinator(registry: registry)
+
+        XCTAssertTrue(coordinator.snapshot.startedSequences.isEmpty)
+        assertStack(
+            selectedActivityLivePresentationStack(
+                from: registry.activities,
+                snapshot: coordinator.snapshot
+            ),
+            contains: [.pomodoro]
+        )
+
+        manager.reset()
+        await coordinator.waitForPendingReconciliation()
+
+        assertStack(
+            selectedActivityLivePresentationStack(
+                from: registry.activities,
+                snapshot: coordinator.snapshot
+            ),
+            contains: []
+        )
+    }
+
     func testDefaultsBackedConfigurationPersistence() {
         let originalValues = (
             Defaults[.pomodoroFocusMinutes],
@@ -297,3 +327,26 @@ final class PomodoroActivityTests: XCTestCase {
         now = now.addingTimeInterval(interval)
     }
 }
+
+@MainActor
+private func assertStack(
+    _ stack: ActivityLivePresentationStack,
+    contains expectedIDs: [ActivityID],
+    file: StaticString = #filePath,
+    line: UInt = #line
+) {
+    XCTAssertEqual(activityIDs(in: stack), expectedIDs, file: file, line: line)
+}
+
+@MainActor
+private func activityIDs(in stack: ActivityLivePresentationStack) -> [ActivityID] {
+    switch stack {
+    case .none:
+        return []
+    case .full(let activity):
+        return [activity.id]
+    case .split(let leading, let trailing):
+        return [leading.id, trailing.id]
+    }
+}
+
