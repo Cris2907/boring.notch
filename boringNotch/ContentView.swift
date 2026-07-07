@@ -47,7 +47,7 @@ struct ContentView: View {
     @Default(.clockShowInClosedNotch) var clockShowInClosedNotch
 
     // Shared interactive spring for movement/resizing to avoid conflicting animations
-    private let animationSpring = Animation.interactiveSpring(response: 0.38, dampingFraction: 0.8, blendDuration: 0)
+    private let animationSpring = Animation.interactiveSpring(response: 0.38, dampingFraction: 0.72, blendDuration: 0)
 
     private let extendedHoverPadding: CGFloat = 30
     private let zeroHeightHoverPadding: CGFloat = 10
@@ -246,7 +246,7 @@ struct ContentView: View {
                 
                 mainLayout
                     .conditionalModifier(true) { view in
-                        let openAnimation = Animation.spring(response: 0.42, dampingFraction: 0.76, blendDuration: 0)
+                        let openAnimation = Animation.spring(response: 0.42, dampingFraction: 0.684, blendDuration: 0)
                         let closeAnimation = Animation.spring(response: 0.45, dampingFraction: 1.0, blendDuration: 0)
                         
                         return view
