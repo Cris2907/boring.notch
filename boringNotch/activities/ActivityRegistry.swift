@@ -38,7 +38,9 @@ enum ActivityRegistryBuilder {
 final class ActivityRegistry: ObservableObject {
     static let shared: ActivityRegistry = {
         do {
-            return try ActivityRegistry {}
+            return try ActivityRegistry {
+                CalendarActivity()
+            }
         } catch {
             preconditionFailure("Invalid default activity registry: \(error)")
         }
@@ -74,6 +76,10 @@ final class ActivityRegistry: ObservableObject {
 
     var availableActivities: [AnyNotchActivity] {
         activities.filter(\.isAvailable)
+    }
+
+    var availableActivityIDs: [ActivityID] {
+        availableActivities.map(\.id)
     }
 
     var activeActivities: [AnyNotchActivity] {

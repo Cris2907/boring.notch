@@ -25,6 +25,7 @@ struct ContentView: View {
     @ObservedObject var volumeManager = VolumeManager.shared
     @ObservedObject var bluetoothAudioManager = BluetoothAudioManager.shared
     @ObservedObject var timeActivityManager = TimeActivityManager.shared
+    @ObservedObject private var activityRegistry = ActivityRegistry.shared
     @State private var hoverTask: Task<Void, Never>?
     @State private var isHovering: Bool = false
     @State private var anyDropDebounceTask: Task<Void, Never>?
@@ -39,7 +40,6 @@ struct ContentView: View {
 
     @Default(.showNotHumanFace) var showNotHumanFace
     @Default(.clockShowInClosedNotch) var clockShowInClosedNotch
-    @Default(.showCalendar) private var showCalendar
 
     // Shared interactive spring for movement/resizing to avoid conflicting animations
     private let animationSpring = Animation.interactiveSpring(response: 0.38, dampingFraction: 0.8, blendDuration: 0)
@@ -211,10 +211,10 @@ struct ContentView: View {
                             }
                         }
                     }
-                    .onChange(of: showCalendar) { _, isEnabled in
+                    .onChange(of: activityRegistry.availableActivityIDs) {
                         let destination = resolvedNotchView(
                             coordinator.currentView,
-                            showCalendar: isEnabled,
+                            availableActivityIDs: activityRegistry.availableActivityIDs,
                             includesShelf: Defaults[.boringShelf]
                         )
                         guard destination != coordinator.currentView else { return }
@@ -422,9 +422,10 @@ struct ContentView: View {
                         switch coordinator.currentView {
                         case .home:
                             NotchHomeView(albumArtNamespace: albumArtNamespace)
-                        case .calendar:
-                            CalendarView()
-                                .preferredOpenNotchHeight(calendarOpenNotchHeight)
+                        case .activity(let id):
+                            if let activity = activityRegistry.activity(for: id), activity.isAvailable {
+                                ExpandedActivityView(activity: activity)
+                            }
                         case .activities:
                             TimeActivityView()
                         case .shelf:
@@ -654,7 +655,7 @@ struct ContentView: View {
                 from: coordinator.currentView,
                 direction: direction,
                 isInverted: Defaults[.invertHorizontalTabGestures],
-                includesCalendar: Defaults[.showCalendar],
+                availableActivityIDs: activityRegistry.availableActivityIDs,
                 includesShelf: Defaults[.boringShelf]
               )
         else { return }

@@ -1,18 +1,18 @@
 import Combine
 import SwiftUI
 
-struct ActivityID: RawRepresentable, Hashable, Codable, Sendable, CustomStringConvertible {
-    let rawValue: String
+public struct ActivityID: RawRepresentable, Hashable, Codable, Sendable, CustomStringConvertible {
+    public let rawValue: String
 
-    init(rawValue: String) {
+    public init(rawValue: String) {
         self.rawValue = rawValue
     }
 
-    init(_ rawValue: String) {
+    public init(_ rawValue: String) {
         self.init(rawValue: rawValue)
     }
 
-    var description: String { rawValue }
+    public var description: String { rawValue }
 }
 
 struct ActivityMetadata {
@@ -124,4 +124,47 @@ final class AnyNotchActivity: @MainActor ObservableObject, Identifiable {
 
     func activityDidAppear() { didAppear() }
     func activityDidDisappear() { didDisappear() }
+}
+
+struct ExpandedActivityView: View {
+    @ObservedObject var activity: AnyNotchActivity
+
+    var body: some View {
+        Group {
+            if let height = activity.metadata.preferredExpandedHeight {
+                activity.makeExpandedView()
+                    .preferredOpenNotchHeight(height)
+            } else {
+                activity.makeExpandedView()
+            }
+        }
+        .onAppear {
+            activity.activityDidAppear()
+        }
+        .onDisappear {
+            activity.activityDidDisappear()
+        }
+    }
+}
+
+struct ActivityConfigurationView: View {
+    let activityID: ActivityID
+
+    @ObservedObject private var registry = ActivityRegistry.shared
+
+    var body: some View {
+        if let activity = registry.activity(for: activityID), activity.supportsConfiguration {
+            RegisteredActivityConfigurationView(activity: activity)
+        } else {
+            EmptyView()
+        }
+    }
+}
+
+private struct RegisteredActivityConfigurationView: View {
+    @ObservedObject var activity: AnyNotchActivity
+
+    var body: some View {
+        activity.makeConfigurationView()
+    }
 }

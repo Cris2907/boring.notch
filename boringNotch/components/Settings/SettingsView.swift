@@ -81,7 +81,7 @@ struct SettingsView: View {
                 case "Media":
                     Media()
                 case "Calendar":
-                    CalendarSettings()
+                    ActivityConfigurationView(activityID: .calendar)
                 case "Clock":
                     ClockSettings()
                 case "HUD":

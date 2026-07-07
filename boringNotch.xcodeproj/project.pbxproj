@@ -123,6 +123,7 @@
 		C1A100022F00000100000001 /* ActivityRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A100122F00000100000001 /* ActivityRegistry.swift */; };
 		C1A100032F00000100000001 /* ExampleActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A100132F00000100000001 /* ExampleActivity.swift */; };
 		C1A100042F00000100000001 /* ActivityArchitectureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A100142F00000100000001 /* ActivityArchitectureTests.swift */; };
+		C1A100052F00000100000001 /* CalendarActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A100152F00000100000001 /* CalendarActivity.swift */; };
 		B10348D92C74E56000475897 /* ConditionalModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10348D82C74E56000475897 /* ConditionalModifier.swift */; };
 		B10F84A32C6C9596009F3026 /* TestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10F84A22C6C9596009F3026 /* TestView.swift */; };
 		B141C2412CA5F53F00AC8CC8 /* SparkleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B141C2402CA5F53E00AC8CC8 /* SparkleView.swift */; };
@@ -342,6 +343,7 @@
 		C1A100122F00000100000001 /* ActivityRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityRegistry.swift; sourceTree = "<group>"; };
 		C1A100132F00000100000001 /* ExampleActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleActivity.swift; sourceTree = "<group>"; };
 		C1A100142F00000100000001 /* ActivityArchitectureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityArchitectureTests.swift; sourceTree = "<group>"; };
+		C1A100152F00000100000001 /* CalendarActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarActivity.swift; sourceTree = "<group>"; };
 		F38DE6472D8243E2008B5C6D /* BatteryActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryActivityManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -746,6 +748,7 @@
 				C1A100112F00000100000001 /* NotchActivity.swift */,
 				C1A100122F00000100000001 /* ActivityRegistry.swift */,
 				C1A100132F00000100000001 /* ExampleActivity.swift */,
+				C1A100152F00000100000001 /* CalendarActivity.swift */,
 			);
 			path = activities;
 			sourceTree = "<group>";
@@ -1020,6 +1023,7 @@
 				C1A100012F00000100000001 /* NotchActivity.swift in Sources */,
 				C1A100022F00000100000001 /* ActivityRegistry.swift in Sources */,
 				C1A100032F00000100000001 /* ExampleActivity.swift in Sources */,
+				C1A100052F00000100000001 /* CalendarActivity.swift in Sources */,
 				C0DEB1000000000000000001 /* BluetoothHeadphoneProfile.swift in Sources */,
 				C0DEB1000000000000000002 /* BluetoothAudioManager.swift in Sources */,
 				C0DEB1000000000000000003 /* BluetoothDeviceActivity.swift in Sources */,

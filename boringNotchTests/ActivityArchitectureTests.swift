@@ -85,6 +85,16 @@ final class ActivityArchitectureTests: XCTestCase {
         XCTAssertFalse(erased.supportsConfiguration)
         XCTAssertFalse(ActivityRegistry.shared.activities.contains { $0.id == example.id })
     }
+
+    func testDefaultRegistryContainsCalendarMetadataAndConfiguration() throws {
+        let calendar = try XCTUnwrap(ActivityRegistry.shared.activity(for: .calendar))
+
+        XCTAssertEqual(calendar.metadata.name, "Calendar")
+        XCTAssertEqual(calendar.metadata.systemImage, "calendar")
+        XCTAssertEqual(calendar.metadata.preferredExpandedHeight, calendarOpenNotchHeight)
+        XCTAssertTrue(calendar.supportsConfiguration)
+        XCTAssertFalse(calendar.supportsCompactPresentation)
+    }
 }
 
 @MainActor

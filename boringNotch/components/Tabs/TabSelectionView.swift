@@ -9,24 +9,19 @@ import Defaults
 import SwiftUI
 
 struct TabModel: Identifiable {
-    let id = UUID()
+    var id: NotchViews { view }
     let label: String
     let icon: String
     let view: NotchViews
+    let tint: Color
 }
 
-private let tabs = [
-    TabModel(label: "Home", icon: "house.fill", view: .home),
-    TabModel(label: "Calendar", icon: "calendar", view: .calendar),
-    TabModel(label: "Activities", icon: "timer", view: .activities),
-    TabModel(label: "Shelf", icon: "tray.fill", view: .shelf)
-]
-
-func visibleNotchViews(showCalendar: Bool, includesShelf: Bool) -> [NotchViews] {
+func visibleNotchViews(
+    availableActivityIDs: [ActivityID],
+    includesShelf: Bool
+) -> [NotchViews] {
     var views: [NotchViews] = [.home]
-    if showCalendar {
-        views.append(.calendar)
-    }
+    views.append(contentsOf: availableActivityIDs.map(NotchViews.activity))
     views.append(.activities)
     if includesShelf {
         views.append(.shelf)
@@ -36,16 +31,19 @@ func visibleNotchViews(showCalendar: Bool, includesShelf: Bool) -> [NotchViews] 
 
 func resolvedNotchView(
     _ currentView: NotchViews,
-    showCalendar: Bool,
+    availableActivityIDs: [ActivityID],
     includesShelf: Bool
 ) -> NotchViews {
-    visibleNotchViews(showCalendar: showCalendar, includesShelf: includesShelf)
+    visibleNotchViews(
+        availableActivityIDs: availableActivityIDs,
+        includesShelf: includesShelf
+    )
         .contains(currentView) ? currentView : .home
 }
 
 struct TabSelectionView: View {
     @ObservedObject var coordinator = BoringViewCoordinator.shared
-    @Default(.showCalendar) private var showCalendar
+    @ObservedObject private var activityRegistry = ActivityRegistry.shared
     @Default(.boringShelf) private var boringShelf
     @Default(.tintedTabIcons) private var tintedTabIcons
     @Namespace var animation
@@ -77,23 +75,50 @@ struct TabSelectionView: View {
     }
 
     private var visibleTabs: [TabModel] {
-        visibleNotchViews(showCalendar: showCalendar, includesShelf: boringShelf)
-            .compactMap { view in tabs.first { $0.view == view } }
+        visibleNotchViews(
+            availableActivityIDs: activityRegistry.availableActivityIDs,
+            includesShelf: boringShelf
+        )
+        .compactMap { tabModel(for: $0) }
     }
 
     private func iconColor(for view: NotchViews) -> Color {
         guard view == coordinator.currentView else { return .gray }
-        return tintedTabIcons ? view.tabTintColor : .white
+        return tintedTabIcons ? tabModel(for: view)?.tint ?? .white : .white
+    }
+
+    private func tabModel(for view: NotchViews) -> TabModel? {
+        switch view {
+        case .home:
+            return TabModel(label: "Home", icon: "house.fill", view: view, tint: .blue)
+        case .activities:
+            return TabModel(label: "Activities", icon: "timer", view: view, tint: .orange)
+        case .shelf:
+            return TabModel(label: "Shelf", icon: "tray.fill", view: view, tint: .blue)
+        case .activity(let id):
+            guard let activity = activityRegistry.activity(for: id), activity.isAvailable else {
+                return nil
+            }
+            return TabModel(
+                label: activity.metadata.name,
+                icon: activity.metadata.systemImage,
+                view: view,
+                tint: activity.metadata.tint
+            )
+        }
     }
 }
 
 struct NotchPaginationDots: View {
     @ObservedObject private var coordinator = BoringViewCoordinator.shared
+    @ObservedObject private var activityRegistry = ActivityRegistry.shared
     @Default(.boringShelf) private var boringShelf
-    @Default(.showCalendar) private var showCalendar
 
     private var pages: [NotchViews] {
-        visibleNotchViews(showCalendar: showCalendar, includesShelf: boringShelf)
+        visibleNotchViews(
+            availableActivityIDs: activityRegistry.availableActivityIDs,
+            includesShelf: boringShelf
+        )
     }
 
     var body: some View {
@@ -110,29 +135,20 @@ struct NotchPaginationDots: View {
                         .contentShape(Circle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(page.accessibilityLabel)
+                .accessibilityLabel(accessibilityLabel(for: page))
             }
         }
         .padding(.vertical, 4)
         .frame(maxWidth: .infinity)
     }
-}
 
-private extension NotchViews {
-    var tabTintColor: Color {
-        switch self {
-        case .home, .shelf: return .blue
-        case .calendar: return .red
-        case .activities: return .orange
-        }
-    }
-
-    var accessibilityLabel: String {
-        switch self {
+    private func accessibilityLabel(for page: NotchViews) -> String {
+        switch page {
         case .home: return "Home page"
-        case .calendar: return "Calendar page"
         case .activities: return "Activities page"
         case .shelf: return "Shelf page"
+        case .activity(let id):
+            return "\(activityRegistry.activity(for: id)?.metadata.name ?? "Activity") page"
         }
     }
 }
