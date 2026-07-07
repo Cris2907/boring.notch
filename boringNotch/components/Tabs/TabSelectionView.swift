@@ -51,7 +51,9 @@ struct TabSelectionView: View {
         HStack(spacing: 0) {
             ForEach(visibleTabs) { tab in
                     TabButton(label: tab.label, icon: tab.icon, selected: coordinator.currentView == tab.view) {
-                        select(tab.view)
+                        withAnimation(.smooth) {
+                            coordinator.currentView = tab.view
+                        }
                     }
                     .frame(height: 26)
                     .foregroundStyle(iconColor(for: tab.view))
@@ -66,10 +68,6 @@ struct TabSelectionView: View {
                                 .matchedGeometryEffect(id: "capsule", in: animation)
                                 .hidden()
                         }
-                    }
-                    .onHover { hovering in
-                        guard hovering else { return }
-                        select(tab.view)
                     }
             }
         }
@@ -87,13 +85,6 @@ struct TabSelectionView: View {
     private func iconColor(for view: NotchViews) -> Color {
         guard view == coordinator.currentView else { return .gray }
         return tintedTabIcons ? tabModel(for: view)?.tint ?? .white : .white
-    }
-
-    private func select(_ view: NotchViews) {
-        guard coordinator.currentView != view else { return }
-        withAnimation(.smooth) {
-            coordinator.currentView = view
-        }
     }
 
     private func tabModel(for view: NotchViews) -> TabModel? {

@@ -474,7 +474,7 @@ struct ContentView: View {
                                 !vm.hideOnClosed {
                           ClosedActivityLivePresentationStackView(
                               stack: livePresentationStack,
-                              onHoverActivity: selectLiveActivityTab
+                              openLiveActivity: openLiveActivityTab
                           )
                           .id(livePresentationStack.identity)
                           .transition(.opacity)
@@ -611,24 +611,30 @@ struct ContentView: View {
         }
     }
 
-    private func selectLiveActivityTab(for activityID: ActivityID) {
-        guard let view = notchView(forLiveActivityID: activityID),
-              coordinator.currentView != view else { return }
-        withAnimation(.smooth) {
-            coordinator.currentView = view
+    private func openLiveActivityTab(for activityID: ActivityID) {
+        guard vm.notchState == .closed,
+              Defaults[.openNotchOnHover],
+              !coordinator.sneakPeek.show,
+              let destination = destinationView(forLiveActivityID: activityID),
+              destination != coordinator.currentView else { return }
+
+        withAnimation(.smooth(duration: 0.25)) {
+            coordinator.currentView = destination
         }
     }
 
-    private func notchView(forLiveActivityID activityID: ActivityID) -> NotchViews? {
+    private func destinationView(forLiveActivityID activityID: ActivityID) -> NotchViews? {
+        if let activity = activityRegistry.activity(for: activityID), activity.isAvailable {
+            return .activity(activityID)
+        }
+
         switch activityID {
         case .media:
             return .home
         case .time:
             return .activities
         default:
-            guard let activity = activityRegistry.activity(for: activityID),
-                  activity.isAvailable else { return nil }
-            return .activity(activityID)
+            return nil
         }
     }
 
@@ -845,7 +851,7 @@ struct MediaMinimalLivePresentationView: View {
 
 private struct ClosedActivityLivePresentationStackView: View {
     let stack: ActivityLivePresentationStack
-    let onHoverActivity: (ActivityID) -> Void
+    let openLiveActivity: (ActivityID) -> Void
 
     var body: some View {
         switch stack {
@@ -854,13 +860,13 @@ private struct ClosedActivityLivePresentationStackView: View {
         case .full(let activity):
             ClosedActivityFullLivePresentationView(
                 activity: activity,
-                onHoverActivity: onHoverActivity
+                openLiveActivity: openLiveActivity
             )
         case .split(let leading, let trailing):
             ClosedActivitySplitLivePresentationView(
                 leadingActivity: leading,
                 trailingActivity: trailing,
-                onHoverActivity: onHoverActivity
+                openLiveActivity: openLiveActivity
             )
         }
     }
@@ -869,7 +875,7 @@ private struct ClosedActivityLivePresentationStackView: View {
 private struct ClosedActivityFullLivePresentationView: View {
     @EnvironmentObject private var vm: BoringViewModel
     @ObservedObject var activity: AnyLiveActivityPresentationProvider
-    let onHoverActivity: (ActivityID) -> Void
+    let openLiveActivity: (ActivityID) -> Void
 
     var body: some View {
         let accessorySize = max(0, vm.effectiveClosedNotchHeight - 12)
@@ -880,7 +886,6 @@ private struct ClosedActivityFullLivePresentationView: View {
         HStack(spacing: 8) {
             activity.makeAccessoryView()
                 .frame(width: accessorySize, height: accessorySize)
-                .onHover(perform: handleHover)
 
             Rectangle()
                 .fill(.black)
@@ -893,14 +898,13 @@ private struct ClosedActivityFullLivePresentationView: View {
 
             activity.makeFullView()
                 .frame(width: contentWidth, alignment: .leading)
-                .onHover(perform: handleHover)
         }
         .frame(height: vm.effectiveClosedNotchHeight, alignment: .center)
-    }
-
-    private func handleHover(_ hovering: Bool) {
-        guard hovering else { return }
-        onHoverActivity(activity.id)
+        .contentShape(Rectangle())
+        .onHover { hovering in
+            guard hovering else { return }
+            openLiveActivity(activity.id)
+        }
     }
 }
 
@@ -908,7 +912,7 @@ private struct ClosedActivitySplitLivePresentationView: View {
     @EnvironmentObject private var vm: BoringViewModel
     @ObservedObject var leadingActivity: AnyLiveActivityPresentationProvider
     @ObservedObject var trailingActivity: AnyLiveActivityPresentationProvider
-    let onHoverActivity: (ActivityID) -> Void
+    let openLiveActivity: (ActivityID) -> Void
 
     var body: some View {
         HStack(spacing: 8) {
@@ -916,7 +920,7 @@ private struct ClosedActivitySplitLivePresentationView: View {
                 activity: leadingActivity,
                 iconPlacement: .trailing,
                 alignment: .trailing,
-                onHoverActivity: onHoverActivity
+                openLiveActivity: openLiveActivity
             )
 
             Rectangle()
@@ -932,7 +936,7 @@ private struct ClosedActivitySplitLivePresentationView: View {
                 activity: trailingActivity,
                 iconPlacement: .leading,
                 alignment: .leading,
-                onHoverActivity: onHoverActivity
+                openLiveActivity: openLiveActivity
             )
         }
         .frame(height: vm.effectiveClosedNotchHeight, alignment: .center)
@@ -945,7 +949,7 @@ private struct ClosedActivityMinimalLivePresentationView: View {
 
     let iconPlacement: ClosedActivityMinimalIconPlacement
     let alignment: Alignment
-    let onHoverActivity: (ActivityID) -> Void
+    let openLiveActivity: (ActivityID) -> Void
 
     var body: some View {
         let accessorySize = max(0, vm.effectiveClosedNotchHeight - 12)
@@ -972,12 +976,11 @@ private struct ClosedActivityMinimalLivePresentationView: View {
             height: vm.effectiveClosedNotchHeight,
             alignment: alignment
         )
-        .onHover(perform: handleHover)
-    }
-
-    private func handleHover(_ hovering: Bool) {
-        guard hovering else { return }
-        onHoverActivity(activity.id)
+        .contentShape(Rectangle())
+        .onHover { hovering in
+            guard hovering else { return }
+            openLiveActivity(activity.id)
+        }
     }
 
     private func icon(accessorySize: CGFloat) -> some View {
