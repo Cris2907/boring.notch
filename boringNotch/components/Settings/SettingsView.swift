@@ -137,7 +137,7 @@ struct ExtensionsSettings: View {
                     HStack(spacing: 12) {
                         if activity.supportsConfiguration {
                             NavigationLink {
-                                ActivityConfigurationView(activityID: activity.id)
+                                ExtensionConfigurationDetail(activityID: activity.id)
                             } label: {
                                 ExtensionSettingsLabel(activity: activity)
                                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -167,6 +167,27 @@ struct ExtensionsSettings: View {
             }
         }
         .navigationTitle("Extensions")
+    }
+}
+
+private struct ExtensionConfigurationDetail: View {
+    let activityID: ActivityID
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        ActivityConfigurationView(activityID: activityID)
+            .toolbar {
+                ToolbarItem(placement: .navigation) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "chevron.left")
+                    }
+                    .help("Back to Extensions")
+                    .accessibilityLabel("Back to Extensions")
+                }
+            }
     }
 }
 
