@@ -165,6 +165,7 @@
 		C1A300022F00000100000001 /* QuickNotesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A300122F00000100000001 /* QuickNotesManager.swift */; };
 		C1A300032F00000100000001 /* QuickNotesActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A300132F00000100000001 /* QuickNotesActivityView.swift */; };
 		C1A300042F00000100000001 /* QuickNotesActivityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A300142F00000100000001 /* QuickNotesActivityTests.swift */; };
+		C1A400012F00000100000001 /* NotchWindowKeyboardFocusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A400112F00000100000001 /* NotchWindowKeyboardFocusTests.swift */; };
 		F38DE6482D8243E7008B5C6D /* BatteryActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F38DE6472D8243E2008B5C6D /* BatteryActivityManager.swift */; };
 /* End PBXBuildFile section */
 
@@ -362,6 +363,7 @@
 		C1A300122F00000100000001 /* QuickNotesManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickNotesManager.swift; sourceTree = "<group>"; };
 		C1A300132F00000100000001 /* QuickNotesActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickNotesActivityView.swift; sourceTree = "<group>"; };
 		C1A300142F00000100000001 /* QuickNotesActivityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickNotesActivityTests.swift; sourceTree = "<group>"; };
+		C1A400112F00000100000001 /* NotchWindowKeyboardFocusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchWindowKeyboardFocusTests.swift; sourceTree = "<group>"; };
 		F38DE6472D8243E2008B5C6D /* BatteryActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryActivityManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -745,6 +747,7 @@
 		A10000130000000000000001 /* boringNotchTests */ = {
 			isa = PBXGroup;
 			children = (
+				C1A400112F00000100000001 /* NotchWindowKeyboardFocusTests.swift */,
 				C1A300142F00000100000001 /* QuickNotesActivityTests.swift */,
 				C1A200152F00000100000001 /* PomodoroActivityTests.swift */,
 				C1A100142F00000100000001 /* ActivityArchitectureTests.swift */,
@@ -1202,6 +1205,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C1A400012F00000100000001 /* NotchWindowKeyboardFocusTests.swift in Sources */,
 				C1A300042F00000100000001 /* QuickNotesActivityTests.swift in Sources */,
 				C1A200052F00000100000001 /* PomodoroActivityTests.swift in Sources */,
 				C1A100042F00000100000001 /* ActivityArchitectureTests.swift in Sources */,

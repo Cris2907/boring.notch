@@ -3,7 +3,6 @@ import SwiftUI
 
 struct QuickNotesActivityView: View {
     @ObservedObject var manager: QuickNotesManager
-    @FocusState private var editorIsFocused: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -41,7 +40,6 @@ struct QuickNotesActivityView: View {
                     .font(.system(size: 14))
                     .scrollContentBackground(.hidden)
                     .padding(5)
-                    .focused($editorIsFocused)
                     .accessibilityLabel("Quick note")
             }
             .background(Color.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 9))
@@ -54,7 +52,6 @@ struct QuickNotesActivityView: View {
         .padding(.vertical, 8)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(.black)
-        .onAppear { editorIsFocused = true }
     }
 
     private var noteBinding: Binding<String> {
