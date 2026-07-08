@@ -4,6 +4,7 @@ import AppKit
 
 private let quickNotesOpenNotchHeightPadding: CGFloat = 26
 private let quickNotesEditorMinimumLineCount = 3
+private let quickNotesEditorAdditionalPaddingPerLine: CGFloat = 2
 private let quickNotesExpandedBottomMargin: CGFloat = 20
 
 struct QuickNotesActivityView: View {
@@ -14,13 +15,8 @@ struct QuickNotesActivityView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Quick Notes")
-                        .font(.system(size: 15, weight: .semibold))
-                    Text("Changes are saved automatically.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+                Text("Quick Notes")
+                    .font(.system(size: 15, weight: .semibold))
 
                 Spacer()
 
@@ -72,6 +68,9 @@ struct QuickNotesActivityView: View {
                 RoundedRectangle(cornerRadius: 9)
                     .stroke(Color.white.opacity(0.1), lineWidth: 1)
                 }
+            .onHover { hovering in
+                hovering ? NSCursor.iBeam.set() : NSCursor.arrow.set()
+            }
             .modifier(QuickNotesLimitShakeEffect(trigger: limitShakeTrigger))
         }
         .padding(.horizontal, 18)
@@ -235,9 +234,13 @@ private struct QuickNotesGrowingTextView: NSViewRepresentable {
 
             let font = textView.font ?? NSFont.systemFont(ofSize: 14)
             let minimumHeight = font.ascender - font.descender + font.leading
+            let lineCount = textView.string
+                .split(separator: "\n", omittingEmptySubsequences: false)
+                .count
+            let linePadding = CGFloat(max(0, lineCount - 1)) * quickNotesEditorAdditionalPaddingPerLine
             let targetHeight = ceil(max(
                 minimumHeight * CGFloat(quickNotesEditorMinimumLineCount),
-                layoutManager.usedRect(for: textContainer).height
+                layoutManager.usedRect(for: textContainer).height + linePadding
             ))
 
             guard abs(parent.textHeight - targetHeight) > 0.5 else { return }
