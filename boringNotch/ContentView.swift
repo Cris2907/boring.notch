@@ -901,19 +901,10 @@ private struct ClosedActivityFullLivePresentationView: View {
             accessorySize: accessorySize
         )
         let edgeSpacing = closedActivityNotchEdgeSpacing(accessorySize: accessorySize)
-        let centerWidth = activity.id == .media
-            ? max(
-                0,
-                vm.closedNotchSize.width
-                    - 20
-                    - accessorySize
-                    - contentWidth
-                    - (edgeSpacing * 2)
-            )
-            : max(
-                0,
-                vm.closedNotchSize.width - cornerRadiusInsets.closed.top
-            )
+        let centerWidth = max(
+            0,
+            vm.closedNotchSize.width - cornerRadiusInsets.closed.top
+        )
 
         HStack(spacing: edgeSpacing) {
             activity.makeAccessoryView()

@@ -302,7 +302,7 @@ final class ActivityArchitectureTests: XCTestCase {
 
         XCTAssertEqual(
             mediaStack.requiredAdditionalWidth(accessorySize: accessorySize),
-            0
+            (accessorySize * 2) + 20
         )
 
         let leadingProvider = LiveTestProvider(
