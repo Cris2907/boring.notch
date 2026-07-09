@@ -957,7 +957,7 @@ private struct ClosedActivityFullLivePresentationView: View {
                 .frame(
                     width: sideWidth,
                     height: vm.effectiveClosedNotchHeight,
-                    alignment: .trailing
+                    alignment: .center
                 )
                 .contentShape(Rectangle())
                 .onHover { hovering in

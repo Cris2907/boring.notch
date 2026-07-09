@@ -498,7 +498,7 @@ struct TimerCompletionInterruptionView: View {
                 .frame(
                     width: sideWidth,
                     height: vm.effectiveClosedNotchHeight,
-                    alignment: .trailing
+                    alignment: .center
                 )
 
             Rectangle()
