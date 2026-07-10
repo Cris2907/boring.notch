@@ -268,7 +268,7 @@ enum DobermanAnimationDefinitions {
     static let walkingBobStepMilliseconds = 180
     static let defaultStageWidth: CGFloat = 640
     static let sceneEdgeInset: CGFloat = 90
-    static let worldTravelMultiplier: CGFloat = 1.55
+    static let worldTravelMultiplier: CGFloat = 2.046
 
     static let defaultFrame = frame("1.1")
 
@@ -427,7 +427,7 @@ struct DobermanRenderState: Equatable, Sendable {
         let spriteWidth = DobermanAnimationDefinitions.frameWidth
             * DobermanAnimationDefinitions.defaultScale
         let centerX = DobermanAnimationDefinitions.targetX(
-            for: .percent(25),
+            for: .center,
             stageWidth: DobermanAnimationDefinitions.defaultStageWidth,
             spriteWidth: spriteWidth,
             currentX: 0
@@ -1128,6 +1128,15 @@ final class DobermanAnimationModel: ObservableObject {
 
     func updateExpandedStageWidth(_ width: CGFloat) {
         expandedStageWidth = max(0, width)
+        let spriteWidth = DobermanAnimationDefinitions.frameWidth
+            * DobermanAnimationDefinitions.defaultScale
+        renderState = updatedState(
+            x: DobermanAnimationDefinitions.visibleX(
+                for: expandedStageWidth / 2 - spriteWidth / 2,
+                stageWidth: expandedStageWidth,
+                spriteWidth: spriteWidth
+            )
+        )
     }
 
     var currentPose: DobermanCanonicalPose {
@@ -1454,7 +1463,7 @@ final class DobermanAnimationModel: ObservableObject {
             currentX: renderState.x
         )
         let targetX = DobermanAnimationDefinitions.visibleX(
-            for: proposedTargetX,
+            for: expandedStageWidth / 2 - spriteWidth / 2,
             stageWidth: expandedStageWidth,
             spriteWidth: spriteWidth
         )
@@ -1496,6 +1505,7 @@ final class DobermanAnimationModel: ObservableObject {
             loop: true,
             token: token
         )
+
     }
 
     private func playAnimation(
@@ -1614,7 +1624,7 @@ final class DobermanAnimationModel: ObservableObject {
             * DobermanAnimationDefinitions.defaultScale
         renderState = updatedState(
             x: DobermanAnimationDefinitions.visibleX(
-                for: DobermanAnimationDefinitions.startX(spriteWidth: spriteWidth),
+                for: expandedStageWidth / 2 - spriteWidth / 2,
                 stageWidth: expandedStageWidth,
                 spriteWidth: spriteWidth
             ),

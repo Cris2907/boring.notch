@@ -152,7 +152,7 @@ final class DobermanActivityTests: XCTestCase {
             ),
             430
         )
-        XCTAssertEqual(DobermanAnimationDefinitions.worldTravelMultiplier, 1.55)
+        XCTAssertEqual(DobermanAnimationDefinitions.worldTravelMultiplier, 2.046)
     }
 
     func testCloseNormalizationUsesOnlyJSXDerivedTransitions() {
