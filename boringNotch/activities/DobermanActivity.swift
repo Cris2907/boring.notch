@@ -267,6 +267,8 @@ enum DobermanAnimationDefinitions {
     static let movementStartDelayMilliseconds = 50
     static let walkingBobStepMilliseconds = 180
     static let defaultStageWidth: CGFloat = 640
+    static let sceneEdgeInset: CGFloat = 32
+    static let worldTravelMultiplier: CGFloat = 1.18
 
     static let defaultFrame = frame("1.1")
 
@@ -369,7 +371,17 @@ enum DobermanAnimationDefinitions {
     }
 
     static func movementDurationMilliseconds(for distance: CGFloat) -> Int {
-        Int(round(min(9000, max(3500, abs(distance) * 7))))
+        Int(round(min(7500, max(2800, abs(distance) * 5.5))))
+    }
+
+    static func visibleX(
+        for proposedX: CGFloat,
+        stageWidth: CGFloat,
+        spriteWidth: CGFloat
+    ) -> CGFloat {
+        let minimumX = sceneEdgeInset
+        let maximumX = max(minimumX, stageWidth - spriteWidth - sceneEdgeInset)
+        return min(maximumX, max(minimumX, proposedX))
     }
 
     static func closeSequence(from pose: DobermanCanonicalPose) -> [DobermanAnimationName] {
@@ -1435,18 +1447,25 @@ final class DobermanAnimationModel: ObservableObject {
         let animation = DobermanAnimationDefinitions.animation(step.action)
         let spriteWidth = DobermanAnimationDefinitions.frameWidth
             * DobermanAnimationDefinitions.defaultScale
-        let targetX = DobermanAnimationDefinitions.targetX(
+        let proposedTargetX = DobermanAnimationDefinitions.targetX(
             for: target,
             stageWidth: expandedStageWidth,
             spriteWidth: spriteWidth,
             currentX: renderState.x
         )
-        let facingDirection: DobermanFacingDirection = targetX < renderState.x ? .left : .right
+        let targetX = DobermanAnimationDefinitions.visibleX(
+            for: proposedTargetX,
+            stageWidth: expandedStageWidth,
+            spriteWidth: spriteWidth
+        )
+        let intendedDistance = proposedTargetX - renderState.x
+        let worldDistance = intendedDistance * DobermanAnimationDefinitions.worldTravelMultiplier
+        let facingDirection: DobermanFacingDirection = intendedDistance < 0 ? .left : .right
         let movementMilliseconds = timingScale == 0
             ? animation.frameDurationMilliseconds
             : step.durationMilliseconds
             ?? DobermanAnimationDefinitions.movementDurationMilliseconds(
-                for: targetX - renderState.x
+                for: worldDistance
             )
 
         try ensureCurrent(token)
@@ -1462,7 +1481,7 @@ final class DobermanAnimationModel: ObservableObject {
 
         try await sleep(milliseconds: DobermanAnimationDefinitions.movementStartDelayMilliseconds)
         try ensureCurrent(token)
-        worldTravel += targetX - renderState.x
+        worldTravel += worldDistance
         renderState = updatedState(
             x: targetX,
             movementDuration: Double(movementMilliseconds) / 1000
@@ -1594,7 +1613,11 @@ final class DobermanAnimationModel: ObservableObject {
         let spriteWidth = DobermanAnimationDefinitions.frameWidth
             * DobermanAnimationDefinitions.defaultScale
         renderState = updatedState(
-            x: DobermanAnimationDefinitions.startX(spriteWidth: spriteWidth),
+            x: DobermanAnimationDefinitions.visibleX(
+                for: DobermanAnimationDefinitions.startX(spriteWidth: spriteWidth),
+                stageWidth: expandedStageWidth,
+                spriteWidth: spriteWidth
+            ),
             movementDuration: 0,
             isWalking: false,
             walkBobOffset: 0
@@ -1718,7 +1741,10 @@ struct DobermanSceneView: View {
 
                 DobermanSpriteSheetView(frame: model.renderState.frame, scale: scale)
                     .scaleEffect(x: model.renderState.facingDirection.scaleX, y: 1, anchor: .center)
-                    .offset(x: model.renderState.x, y: groundY + (reducedMotion ? 0 : model.renderState.walkBobOffset))
+                    .offset(
+                        x: model.renderState.x,
+                        y: groundY - 4 + (reducedMotion ? 0 : model.renderState.walkBobOffset)
+                    )
                     .animation(.linear(duration: reducedMotion ? 0.12 : model.renderState.movementDuration), value: model.renderState.x)
                     .accessibilityLabel("Doberman in the scene")
             }
