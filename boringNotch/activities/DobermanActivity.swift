@@ -279,6 +279,7 @@ enum DobermanAnimationDefinitions {
     static let defaultStageWidth: CGFloat = 640
     static let sceneEdgeInset: CGFloat = 90
     static let worldTravelMultiplier: CGFloat = 2.046
+    static let walkingPointsPerSecond: CGFloat = 100
 
     static let defaultFrame = frame("1.1")
 
@@ -381,7 +382,7 @@ enum DobermanAnimationDefinitions {
     }
 
     static func movementDurationMilliseconds(for distance: CGFloat) -> Int {
-        Int(round(min(9000, max(3500, abs(distance) * 7))))
+        Int(round(abs(distance) / walkingPointsPerSecond * 1000))
     }
 
     static func visibleX(
@@ -1598,11 +1599,13 @@ final class DobermanAnimationModel: ObservableObject {
 
         try await sleep(milliseconds: DobermanAnimationDefinitions.movementStartDelayMilliseconds)
         try ensureCurrent(token)
-        worldTravel += worldDistance
         renderState = updatedState(
             x: targetX,
             movementDuration: Double(movementMilliseconds) / 1000
         )
+        // Publish the duration before changing world travel so a reversal starts
+        // with the new walk's timing instead of inheriting the previous animation.
+        worldTravel += worldDistance
 
         try await playFrames(
             animation.frames,
