@@ -133,10 +133,10 @@ final class DobermanActivityTests: XCTestCase {
             ),
             664
         )
-        XCTAssertEqual(DobermanAnimationDefinitions.movementDurationMilliseconds(for: 100), 1000)
-        XCTAssertEqual(DobermanAnimationDefinitions.movementDurationMilliseconds(for: 500), 5000)
-        XCTAssertEqual(DobermanAnimationDefinitions.movementDurationMilliseconds(for: 2000), 20000)
-        XCTAssertEqual(DobermanAnimationDefinitions.walkingPointsPerSecond, 100)
+        XCTAssertEqual(DobermanAnimationDefinitions.movementDurationMilliseconds(for: 100), 2000)
+        XCTAssertEqual(DobermanAnimationDefinitions.movementDurationMilliseconds(for: 500), 10000)
+        XCTAssertEqual(DobermanAnimationDefinitions.movementDurationMilliseconds(for: 2000), 40000)
+        XCTAssertEqual(DobermanAnimationDefinitions.walkingPointsPerSecond, 50)
         XCTAssertEqual(
             DobermanAnimationDefinitions.visibleX(
                 for: -100,

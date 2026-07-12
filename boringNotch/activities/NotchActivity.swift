@@ -102,6 +102,7 @@ protocol NotchActivity: ObservableObject {
     var isActive: Bool { get }
     var supportsCompactPresentation: Bool { get }
     var livePresentationState: ActivityLivePresentationState { get }
+    var showsAccessoryInMinimalPresentation: Bool { get }
     var livePresentationSizing: LiveActivityPresentationSizing { get }
     var supportsConfiguration: Bool { get }
 
@@ -120,6 +121,7 @@ extension NotchActivity {
     var isActive: Bool { false }
     var supportsCompactPresentation: Bool { false }
     var livePresentationState: ActivityLivePresentationState { .hidden }
+    var showsAccessoryInMinimalPresentation: Bool { true }
     var livePresentationSizing: LiveActivityPresentationSizing {
         LiveActivityPresentationSizing()
     }
@@ -164,6 +166,7 @@ final class AnyNotchActivity: @MainActor ObservableObject, Identifiable {
     private let activeState: () -> Bool
     private let compactPresentationSupport: () -> Bool
     private let livePresentation: () -> ActivityLivePresentationState
+    private let minimalPresentationAccessoryVisibility: () -> Bool
     private let presentationSizing: () -> LiveActivityPresentationSizing
     private let configurationSupport: () -> Bool
     private let expandedView: () -> AnyView
@@ -182,6 +185,9 @@ final class AnyNotchActivity: @MainActor ObservableObject, Identifiable {
         activeState = { activity.isActive }
         compactPresentationSupport = { activity.supportsCompactPresentation }
         livePresentation = { activity.livePresentationState }
+        minimalPresentationAccessoryVisibility = {
+            activity.showsAccessoryInMinimalPresentation
+        }
         presentationSizing = { activity.livePresentationSizing }
         configurationSupport = { activity.supportsConfiguration }
         expandedView = { AnyView(activity.makeExpandedView()) }
@@ -201,6 +207,9 @@ final class AnyNotchActivity: @MainActor ObservableObject, Identifiable {
     var isActive: Bool { activeState() }
     var supportsCompactPresentation: Bool { compactPresentationSupport() }
     var livePresentationState: ActivityLivePresentationState { livePresentation() }
+    var showsAccessoryInMinimalPresentation: Bool {
+        minimalPresentationAccessoryVisibility()
+    }
     var livePresentationSizing: LiveActivityPresentationSizing { presentationSizing() }
     var supportsConfiguration: Bool { configurationSupport() }
 
@@ -273,7 +282,9 @@ final class AnyLiveActivityPresentationProvider: ObservableObject, Identifiable 
         presentationState = {
             activity.isAvailable ? activity.livePresentationState : .hidden
         }
-        minimalPresentationAccessoryVisibility = { true }
+        minimalPresentationAccessoryVisibility = {
+            activity.showsAccessoryInMinimalPresentation
+        }
         presentationSizing = { activity.livePresentationSizing }
         accessoryView = {
             AnyView(
@@ -296,7 +307,9 @@ final class AnyLiveActivityPresentationProvider: ObservableObject, Identifiable 
         presentationState = {
             registry.isActivityAvailable(activity.id) ? activity.livePresentationState : .hidden
         }
-        minimalPresentationAccessoryVisibility = { true }
+        minimalPresentationAccessoryVisibility = {
+            activity.showsAccessoryInMinimalPresentation
+        }
         presentationSizing = { activity.livePresentationSizing }
         accessoryView = {
             AnyView(

@@ -49,6 +49,7 @@ final class DobermanActivity: NotchActivity {
 
     var isActive: Bool { true }
     var supportsConfiguration: Bool { true }
+    var showsAccessoryInMinimalPresentation: Bool { false }
 
     var livePresentationState: ActivityLivePresentationState {
         expandedAppearanceCount == 0 ? .visible(priority: .low) : .hidden
@@ -279,7 +280,7 @@ enum DobermanAnimationDefinitions {
     static let defaultStageWidth: CGFloat = 640
     static let sceneEdgeInset: CGFloat = 90
     static let worldTravelMultiplier: CGFloat = 2.046
-    static let walkingPointsPerSecond: CGFloat = 100
+    static let walkingPointsPerSecond: CGFloat = 50
 
     static let defaultFrame = frame("1.1")
 
@@ -1840,7 +1841,7 @@ struct DobermanExpandedActivityView: View {
 }
 
 struct DobermanSceneView: View {
-    static let grassDepth: CGFloat = 2.3
+    static let grassDepth: CGFloat = 1.38
 
     @ObservedObject var model: DobermanAnimationModel
     let foodPlateState: DobermanFoodPlateState
@@ -1871,7 +1872,7 @@ struct DobermanSceneView: View {
 
                 DobermanParallaxLayer(
                     imageName: selectedTime.assetName(for: "sun", background: selectedBackground),
-                    travel: model.worldTravel,
+                    travel: 0,
                     depth: 0.4
                 )
                 DobermanScrollingCloudLayer(
