@@ -1863,7 +1863,6 @@ struct DobermanExpandedActivityView: View {
         HStack(spacing: 12) {
             DobermanSceneView(
                 model: model,
-                presentationPhase: behaviorController.presentationPhase,
                 foodPlateState: behaviorController.foodPlateState,
                 foodPlateSide: behaviorController.foodPlateSide,
                 isFoodPlateInScene: behaviorController.isFoodPlateInScene,
@@ -1897,7 +1896,6 @@ struct DobermanSceneView: View {
     static let grassDepth: CGFloat = 1.38
 
     @ObservedObject var model: DobermanAnimationModel
-    let presentationPhase: DobermanActivityPresentationPhase
     let foodPlateState: DobermanFoodPlateState
     let foodPlateSide: DobermanFoodPlateSide
     let isFoodPlateInScene: Bool
@@ -1947,8 +1945,6 @@ struct DobermanSceneView: View {
                         usesNearestNeighbor: true
                     )
                 }
-                .opacity(presentationPhase == .opening ? 0 : 1)
-                .animation(.easeOut(duration: 0.25), value: presentationPhase)
 
                 if foodPlateState != .hidden {
                     let grassTravel = (model.worldTravel - foodPlateSpawnTravel) * Self.grassDepth
